@@ -245,3 +245,6 @@ $RECYCLE.BIN/
 
 venv
 .aws-sam
+/dist/
+/build/
+local

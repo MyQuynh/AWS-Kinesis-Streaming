@@ -8,139 +8,139 @@ Description: >
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    Layers:
-      - !Ref RuntimeDependenciesLayer
+    # Layers:
+    #   - !Ref RuntimeDependenciesLayer
     Runtime: python3.7
     MemorySize: 128
     Timeout: 100
 
 Resources:
 
-  IngestDataFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Handler: hello_world/injest.handler
-      Events:
-        Stream:
-          Type: Kinesis
-          Properties:
-            Stream: !GetAtt KinesisStream.Arn
-            StartingPosition: LATEST
-            BatchSize: 100
-  
-  DeliveryStream:
-    Type: AWS::KinesisFirehose::DeliveryStream
-    DependsOn:
-      - DeliveryStreamPolicy
-    Properties:
-      DeliveryStreamType: DirectPut
-      ExtendedS3DestinationConfiguration:
-        Prefix: !Ref FirehoseS3Prefix
-        BucketARN: !GetAtt S3Records.Arn
-        BufferingHints:
-          IntervalInSeconds: !Ref FirehoseBufferingInterval
-          SizeInMBs: !Ref FirehoseBufferingSize
-        CompressionFormat: !Ref FirehoseCompressionFormat
-        RoleARN: !GetAtt DeliveryStreamRole.Arn
-        ProcessingConfiguration:
-          Enabled: true
-          Processors:
-            - Type: Lambda
-              Parameters:
-                - ParameterName: LambdaArn
-                  ParameterValue: !GetAtt IngestDataFunction.Arn
-
-  KinesisStream:
-    Type: "AWS::Kinesis::Stream"
-    Properties:
-      ShardCount: 4
-
-  
-  DDBConsumer:
-    Type: "AWS::Kinesis::StreamConsumer"
-    Properties:
-      StreamARN: !GetAtt KinesisStream.Arn
-      ConsumerName: DDBConsumer
-
-  S3Consumer:
-    Type: "AWS::Kinesis::StreamConsumer"
-    Properties:
-      StreamARN: !GetAtt KinesisStream.Arn
-      ConsumerName: S3Consumer
-  
-  DDBRecords:
-    Type: AWS::Serverless::SimpleTable
-
-  S3Records:
-    Type: AWS::S3::Bucket
-
-  RuntimeDependenciesLayer:
-    Type: AWS::Serverless::LayerVersion
-    Metadata:
-      BuildMethod: makefile
-    Properties:
-      LayerName: "kenesis-dependencies"
-      Description: Python Runtime dependencies for Lambdas
-      ContentUri: ./
-      CompatibleRuntimes:
-        - python3.7
-      RetentionPolicy: Retain
-
-  # DynamoTable:
-  #   Type: AWS::DynamoDB::Table
+  # IngestDataFunction:
+  #   Type: AWS::Serverless::Function
   #   Properties:
-  #     AttributeDefinitions:
-  #       -
-  #         AttributeName: "id"
-  #         AttributeType: "S"
-  #       -
-  #         AttributeName: "date"
-  #         AttributeType: "S"
-  #     KeySchema:
-  #       -
-  #         AttributeName: "id"
-  #         KeyType: "HASH"
-  #       -
-  #         AttributeName: "date"
-  #         KeyType: "RANGE"
-  #     ProvisionedThroughput:
-  #       ReadCapacityUnits: "1"
-  #       WriteCapacityUnits: "1"
-  #     TableName: "DynamoTable"
+  #     Handler: hello_world/injest.handler
+  #     Events:
+  #       Stream:
+  #         Type: Kinesis
+  #         Properties:
+  #           Stream: !GetAtt KinesisStream.Arn
+  #           StartingPosition: LATEST
+  #           BatchSize: 100
   
-  DDBFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: ddb/
-      Policies:
-        - DynamoDBCrudPolicy: {TableName: !Ref DDBRecords}
-      Environment:
-        Variables:
-          TABLE: !Ref DDBRecords
-      Events:
-        Stream:
-          Type: Kinesis
-          Properties:
-            Stream: !GetAtt DDBConsumer.ConsumerARN
-            StartingPosition: LATEST
-            BatchSize: 100
+  # DeliveryStream:
+  #   Type: AWS::KinesisFirehose::DeliveryStream
+  #   DependsOn:
+  #     - DeliveryStreamPolicy
+  #   Properties:
+  #     DeliveryStreamType: DirectPut
+  #     ExtendedS3DestinationConfiguration:
+  #       Prefix: !Ref FirehoseS3Prefix
+  #       BucketARN: !GetAtt S3Records.Arn
+  #       BufferingHints:
+  #         IntervalInSeconds: !Ref FirehoseBufferingInterval
+  #         SizeInMBs: !Ref FirehoseBufferingSize
+  #       CompressionFormat: !Ref FirehoseCompressionFormat
+  #       RoleARN: !GetAtt DeliveryStreamRole.Arn
+  #       ProcessingConfiguration:
+  #         Enabled: true
+  #         Processors:
+  #           - Type: Lambda
+  #             Parameters:
+  #               - ParameterName: LambdaArn
+  #                 ParameterValue: !GetAtt IngestDataFunction.Arn
+
+  # KinesisStream:
+  #   Type: "AWS::Kinesis::Stream"
+  #   Properties:
+  #     ShardCount: 4
+
   
-  S3Function:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: s3/
-      Policies:
-        - S3CrudPolicy: {BucketName: !Ref S3Records}
-      Environment:
-        Variables:
-          BUCKET: !Ref S3Records
-      Events:
-        Stream:
-          Type: Kinesis
-          Properties:
-            Stream: !GetAtt S3Consumer.ConsumerARN
-            StartingPosition: LATEST
-            BatchSize: 100
+  # DDBConsumer:
+  #   Type: "AWS::Kinesis::StreamConsumer"
+  #   Properties:
+  #     StreamARN: !GetAtt KinesisStream.Arn
+  #     ConsumerName: DDBConsumer
+
+  # S3Consumer:
+  #   Type: "AWS::Kinesis::StreamConsumer"
+  #   Properties:
+  #     StreamARN: !GetAtt KinesisStream.Arn
+  #     ConsumerName: S3Consumer
+  
+  # DDBRecords:
+  #   Type: AWS::Serverless::SimpleTable
+
+  # S3Records:
+  #   Type: AWS::S3::Bucket
+
+  # RuntimeDependenciesLayer:
+  #   Type: AWS::Serverless::LayerVersion
+  #   Metadata:
+  #     BuildMethod: makefile
+  #   Properties:
+  #     LayerName: "kenesis-dependencies"
+  #     Description: Python Runtime dependencies for Lambdas
+  #     ContentUri: ./
+  #     CompatibleRuntimes:
+  #       - python3.7
+  #     RetentionPolicy: Retain
+
+  # # DynamoTable:
+  # #   Type: AWS::DynamoDB::Table
+  # #   Properties:
+  # #     AttributeDefinitions:
+  # #       -
+  # #         AttributeName: "id"
+  # #         AttributeType: "S"
+  # #       -
+  # #         AttributeName: "date"
+  # #         AttributeType: "S"
+  # #     KeySchema:
+  # #       -
+  # #         AttributeName: "id"
+  # #         KeyType: "HASH"
+  # #       -
+  # #         AttributeName: "date"
+  # #         KeyType: "RANGE"
+  # #     ProvisionedThroughput:
+  # #       ReadCapacityUnits: "1"
+  # #       WriteCapacityUnits: "1"
+  # #     TableName: "DynamoTable"
+  
+  # DDBFunction:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: ddb/
+  #     Policies:
+  #       - DynamoDBCrudPolicy: {TableName: !Ref DDBRecords}
+  #     Environment:
+  #       Variables:
+  #         TABLE: !Ref DDBRecords
+  #     Events:
+  #       Stream:
+  #         Type: Kinesis
+  #         Properties:
+  #           Stream: !GetAtt DDBConsumer.ConsumerARN
+  #           StartingPosition: LATEST
+  #           BatchSize: 100
+  
+  # S3Function:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: s3/
+  #     Policies:
+  #       - S3CrudPolicy: {BucketName: !Ref S3Records}
+  #     Environment:
+  #       Variables:
+  #         BUCKET: !Ref S3Records
+  #     Events:
+  #       Stream:
+  #         Type: Kinesis
+  #         Properties:
+  #           Stream: !GetAtt S3Consumer.ConsumerARN
+  #           StartingPosition: LATEST
+  #           BatchSize: 100
 
 
   HelloWorldFunction:
