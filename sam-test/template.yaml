@@ -16,10 +16,45 @@ Globals:
 
 Resources:
 
+  IngestDataFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: hello_world/injest.handler
+      Events:
+        Stream:
+          Type: Kinesis
+          Properties:
+            Stream: !GetAtt KinesisStream.Arn
+            StartingPosition: LATEST
+            BatchSize: 100
+  
+  DeliveryStream:
+    Type: AWS::KinesisFirehose::DeliveryStream
+    DependsOn:
+      - DeliveryStreamPolicy
+    Properties:
+      DeliveryStreamType: DirectPut
+      ExtendedS3DestinationConfiguration:
+        Prefix: !Ref FirehoseS3Prefix
+        BucketARN: !GetAtt S3Records.Arn
+        BufferingHints:
+          IntervalInSeconds: !Ref FirehoseBufferingInterval
+          SizeInMBs: !Ref FirehoseBufferingSize
+        CompressionFormat: !Ref FirehoseCompressionFormat
+        RoleARN: !GetAtt DeliveryStreamRole.Arn
+        ProcessingConfiguration:
+          Enabled: true
+          Processors:
+            - Type: Lambda
+              Parameters:
+                - ParameterName: LambdaArn
+                  ParameterValue: !GetAtt IngestDataFunction.Arn
+
   KinesisStream:
     Type: "AWS::Kinesis::Stream"
     Properties:
       ShardCount: 4
+
   
   DDBConsumer:
     Type: "AWS::Kinesis::StreamConsumer"
@@ -50,28 +85,62 @@ Resources:
       CompatibleRuntimes:
         - python3.7
       RetentionPolicy: Retain
+
+  # DynamoTable:
+  #   Type: AWS::DynamoDB::Table
+  #   Properties:
+  #     AttributeDefinitions:
+  #       -
+  #         AttributeName: "id"
+  #         AttributeType: "S"
+  #       -
+  #         AttributeName: "date"
+  #         AttributeType: "S"
+  #     KeySchema:
+  #       -
+  #         AttributeName: "id"
+  #         KeyType: "HASH"
+  #       -
+  #         AttributeName: "date"
+  #         KeyType: "RANGE"
+  #     ProvisionedThroughput:
+  #       ReadCapacityUnits: "1"
+  #       WriteCapacityUnits: "1"
+  #     TableName: "DynamoTable"
   
-  DynamoTable:
-    Type: AWS::DynamoDB::Table
+  DDBFunction:
+    Type: AWS::Serverless::Function
     Properties:
-      AttributeDefinitions:
-        -
-          AttributeName: "id"
-          AttributeType: "S"
-        -
-          AttributeName: "date"
-          AttributeType: "S"
-      KeySchema:
-        -
-          AttributeName: "id"
-          KeyType: "HASH"
-        -
-          AttributeName: "date"
-          KeyType: "RANGE"
-      ProvisionedThroughput:
-        ReadCapacityUnits: "1"
-        WriteCapacityUnits: "1"
-      TableName: "DynamoTable"
+      CodeUri: ddb/
+      Policies:
+        - DynamoDBCrudPolicy: {TableName: !Ref DDBRecords}
+      Environment:
+        Variables:
+          TABLE: !Ref DDBRecords
+      Events:
+        Stream:
+          Type: Kinesis
+          Properties:
+            Stream: !GetAtt DDBConsumer.ConsumerARN
+            StartingPosition: LATEST
+            BatchSize: 100
+  
+  S3Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3/
+      Policies:
+        - S3CrudPolicy: {BucketName: !Ref S3Records}
+      Environment:
+        Variables:
+          BUCKET: !Ref S3Records
+      Events:
+        Stream:
+          Type: Kinesis
+          Properties:
+            Stream: !GetAtt S3Consumer.ConsumerARN
+            StartingPosition: LATEST
+            BatchSize: 100
 
 
   HelloWorldFunction:
