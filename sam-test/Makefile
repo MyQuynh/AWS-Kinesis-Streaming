@@ -38,15 +38,6 @@ requirements pip:
 	@ pip install -e .
 	@ echo "You are ready to go ;-)"
 
-requirementsdev:
-	@ if [ -z "${VIRTUAL_ENV}" ]; then \
-		echo "Not inside a virtualenv."; \
-		exit 1; \
-	fi
-	@ echo "Upgrading pip..."
-	@ pip install --upgrade pip
-	@ echo "Updating pip packages:"
-	@ pip install -r "requirements_dev.txt"
 
 cleanfull:
 	@ echo "Cleaning old files..."
@@ -74,24 +65,6 @@ clean:
 	@ rm -rf .coverage*
 	@ rm -rf **/*.pyc
 	@ echo "All done!"
-
-dockerrun dkr:
-	@ docker run -p 8000:8000 -d --rm --network lambda-local --name dynamodb -v $(CURDIR)/local/dynamodb:/data/ amazon/dynamodb-local -jar DynamoDBLocal.jar -sharedDb -dbPath /data
-
-dockerstop dks:
-	@ docker stop dynamodb
-
-containerprune ctp:
-	@ docker container prune
-
-dockernetwork dkn:
-	@ docker network create lambda-local
-
-server:
-	@ sam local start-api --docker-network lambda-local --parameter-overrides Table=Activities Region=us-east-1 AWSEnv=AWS_SAM_LOCAL
-
-test:
-	@ tox
 
 package:
 	@ python setup.py sdist
