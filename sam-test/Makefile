@@ -23,15 +23,13 @@ venv virtualenv:
 
 activate:
 	@ echo "Activating this Python3 Virtual Env:"
-	@ bash --rcfile "./venv/bin/activate"
+	@ echo "source venv/bin/activate"
 
-requirements pip:
+install:
 	@ if [ -z "${VIRTUAL_ENV}" ]; then \
 		echo "Not inside a virtualenv."; \
 		exit 1; \
 	fi
-	@ echo "Upgrading pip..."
-	@ pip install --upgrade pip
 	@ echo "Updating pip packages:"
 	@ pip install -r "requirements.txt"
 	@ echo "Self installing this package in edit mode:"

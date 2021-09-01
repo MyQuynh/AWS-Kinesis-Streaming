@@ -8,25 +8,25 @@ Description: >
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    # Layers:
-    #   - !Ref RuntimeDependenciesLayer
+    Layers:
+      - !Ref RuntimeDependenciesLayer
     Runtime: python3.7
     MemorySize: 128
     Timeout: 100
 
 Resources:
 
-  # IngestDataFunction:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     Handler: hello_world/injest.handler
-  #     Events:
-  #       Stream:
-  #         Type: Kinesis
-  #         Properties:
-  #           Stream: !GetAtt KinesisStream.Arn
-  #           StartingPosition: LATEST
-  #           BatchSize: 100
+  IngestDataFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: hello_world/injest.handler
+      Events:
+        Stream:
+          Type: Kinesis
+          Properties:
+            Stream: !GetAtt DeliveryStream.Arn
+            StartingPosition: LATEST
+            BatchSize: 100
   
   # DeliveryStream:
   #   Type: AWS::KinesisFirehose::DeliveryStream
@@ -71,20 +71,18 @@ Resources:
   # DDBRecords:
   #   Type: AWS::Serverless::SimpleTable
 
-  # S3Records:
-  #   Type: AWS::S3::Bucket
+  S3Records:
+    Type: AWS::S3::Bucket
 
-  # RuntimeDependenciesLayer:
-  #   Type: AWS::Serverless::LayerVersion
-  #   Metadata:
-  #     BuildMethod: makefile
-  #   Properties:
-  #     LayerName: "kenesis-dependencies"
-  #     Description: Python Runtime dependencies for Lambdas
-  #     ContentUri: ./
-  #     CompatibleRuntimes:
-  #       - python3.7
-  #     RetentionPolicy: Retain
+  RuntimeDependenciesLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: "kenesis-dependencies"
+      Description: Python Runtime dependencies for Lambdas
+      ContentUri: ./
+      CompatibleRuntimes:
+        - python3.7
+      RetentionPolicy: Retain
 
   # # DynamoTable:
   # #   Type: AWS::DynamoDB::Table

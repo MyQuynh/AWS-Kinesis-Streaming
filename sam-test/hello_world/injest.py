@@ -39,4 +39,4 @@ def put_to_stream(the_data, property_value, property_timestamp):
     print(payload)
 
 
-    put_response = k_client.put_record(StreamName=stream_name,Data​=json.dumps(payload),PartitionKey=the_data)
+    put_response = k_client.put_record(StreamName=stream_name,PartitionKey=the_data, Data = json.dump(payload))
