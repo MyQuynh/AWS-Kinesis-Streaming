@@ -28,27 +28,27 @@ Resources:
             StartingPosition: LATEST
             BatchSize: 100
   
-  # DeliveryStream:
-  #   Type: AWS::KinesisFirehose::DeliveryStream
-  #   DependsOn:
-  #     - DeliveryStreamPolicy
-  #   Properties:
-  #     DeliveryStreamType: DirectPut
-  #     ExtendedS3DestinationConfiguration:
-  #       Prefix: !Ref FirehoseS3Prefix
-  #       BucketARN: !GetAtt S3Records.Arn
-  #       BufferingHints:
-  #         IntervalInSeconds: !Ref FirehoseBufferingInterval
-  #         SizeInMBs: !Ref FirehoseBufferingSize
-  #       CompressionFormat: !Ref FirehoseCompressionFormat
-  #       RoleARN: !GetAtt DeliveryStreamRole.Arn
-  #       ProcessingConfiguration:
-  #         Enabled: true
-  #         Processors:
-  #           - Type: Lambda
-  #             Parameters:
-  #               - ParameterName: LambdaArn
-  #                 ParameterValue: !GetAtt IngestDataFunction.Arn
+  DeliveryStream:
+    Type: AWS::KinesisFirehose::DeliveryStream
+    DependsOn:
+      - DeliveryStreamPolicy
+    Properties:
+      DeliveryStreamType: DirectPut
+      ExtendedS3DestinationConfiguration:
+        Prefix: !Ref FirehoseS3Prefix
+        BucketARN: !GetAtt S3Records.Arn
+        BufferingHints:
+          IntervalInSeconds: !Ref FirehoseBufferingInterval
+          SizeInMBs: !Ref FirehoseBufferingSize
+        CompressionFormat: !Ref FirehoseCompressionFormat
+        RoleARN: !GetAtt DeliveryStreamRole.Arn
+        ProcessingConfiguration:
+          Enabled: true
+          Processors:
+            - Type: Lambda
+              Parameters:
+                - ParameterName: LambdaArn
+                  ParameterValue: !GetAtt IngestDataFunction.Arn
 
   # KinesisStream:
   #   Type: "AWS::Kinesis::Stream"
@@ -76,6 +76,8 @@ Resources:
 
   RuntimeDependenciesLayer:
     Type: AWS::Serverless::LayerVersion
+    Metadata:
+        BuildMethod: makefile
     Properties:
       LayerName: "kenesis-dependencies"
       Description: Python Runtime dependencies for Lambdas
@@ -144,7 +146,6 @@ Resources:
   HelloWorldFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      CodeUri: hello_world/
       Handler: app.lambda_handler
       Runtime: python3.7
       Events:

@@ -4,6 +4,9 @@ endif
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
+.PHONY: build-RuntimeDependenciesLayer
+
+
 
 help:
 	@ echo "Use one of the following targets:"
@@ -70,3 +73,9 @@ package:
 
 upload pypi:
 	@ python setup.py sdist upload
+
+
+build-RuntimeDependenciesLayer:
+		mkdir -p "$(ARTIFACTS_DIR)/python"
+		cp *.py "$(ARTIFACTS_DIR)/python"
+		python -m pip install -r requirements.txt -t "$(ARTIFACTS_DIR)/python"
