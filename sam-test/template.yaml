@@ -14,24 +14,40 @@ Globals:
     MemorySize: 128
     Timeout: 100
 
+Parameters:
+  FirehoseS3Prefix:
+    Type: String
+    Default: firehose/
+    Description: "The S3 Key prefix for Kinesis Firehose."
+  FirehoseCompressionFormat:
+    Type: String
+    Default: GZIP
+    AllowedValues: [UNCOMPRESSED, GZIP, Snappy]
+    Description: "Compression format used by Kinesis Firehose"
+  FirehoseBufferingInterval:
+    Type: Number
+    Default: 60
+    MinValue: 60
+    MaxValue: 900
+    Description: "How long Firehose will wait before writing a new batch into S3"
+  FirehoseBufferingSize:
+    Type: Number
+    Default: 10
+    MinValue: 1
+    MaxValue: 128
+    Description: "Maximum batch size in MB"
+
 Resources:
 
   IngestDataFunction:
     Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
     Properties:
-      Handler: hello_world/injest.handler
-      Events:
-        Stream:
-          Type: Kinesis
-          Properties:
-            Stream: !GetAtt DeliveryStream.Arn
-            StartingPosition: LATEST
-            BatchSize: 100
+      Handler: ingest.lambda_handler
   
   DeliveryStream:
     Type: AWS::KinesisFirehose::DeliveryStream
-    DependsOn:
-      - DeliveryStreamPolicy
     Properties:
       DeliveryStreamType: DirectPut
       ExtendedS3DestinationConfiguration:
@@ -49,6 +65,53 @@ Resources:
               Parameters:
                 - ParameterName: LambdaArn
                   ParameterValue: !GetAtt IngestDataFunction.Arn
+  
+  
+  DeliveryStreamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service: firehose.amazonaws.com
+            Action: 'sts:AssumeRole'
+            Condition:
+              StringEquals:
+                'sts:ExternalId': !Ref 'AWS::AccountId'
+  
+  DeliveryStreamPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      Roles:
+        - !Ref DeliveryStreamRole
+      PolicyName: firehose_delivery_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 's3:AbortMultipartUpload'
+              - 's3:GetBucketLocation'
+              - 's3:GetObject'
+              - 's3:ListBucket'
+              - 's3:ListBucketMultipartUploads'
+              - 's3:PutObject'
+            Resource:
+              - !GetAtt S3Records.Arn
+              - !Join 
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref S3Records
+                  - '*'
+          - Effect: Allow
+            Action:
+              - 'lambda:InvokeFunction'
+              - 'lambda:GetFunctionConfiguration'
+            Resource:
+              - !GetAtt IngestDataFunction.Arn
 
   # KinesisStream:
   #   Type: "AWS::Kinesis::Stream"
@@ -145,6 +208,8 @@ Resources:
 
   HelloWorldFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Metadata:
+      BuildMethod: makefile
     Properties:
       Handler: app.lambda_handler
       Runtime: python3.7

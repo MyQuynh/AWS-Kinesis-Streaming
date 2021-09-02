@@ -4,9 +4,10 @@ endif
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
-.PHONY: build-RuntimeDependenciesLayer
+.PHONY: build-RuntimeDependenciesLayer build-lambda-common
+.PHONY: build-CovidFunction
 
-
+HANDLER:= $(src/**/*.py)
 
 help:
 	@ echo "Use one of the following targets:"
@@ -22,11 +23,13 @@ venv virtualenv:
 	@ rm -rf venv || true
 	@ python3 -m venv venv
 	@ echo "Done, now you need to activate it. Run:"
-	@ echo "source venv/bin/activate"
+	@ echo "source venv/Scripts/activate"
+
+
 
 activate:
 	@ echo "Activating this Python3 Virtual Env:"
-	@ echo "source venv/bin/activate"
+	@ echo "source venv/Scripts/activate"
 
 install:
 	@ if [ -z "${VIRTUAL_ENV}" ]; then \
@@ -78,4 +81,17 @@ upload pypi:
 build-RuntimeDependenciesLayer:
 		mkdir -p "$(ARTIFACTS_DIR)/python"
 		cp *.py "$(ARTIFACTS_DIR)/python"
-		python -m pip install -r requirements.txt -t "$(ARTIFACTS_DIR)/python"
+		python -m pip install -r requirements_prod.txt -t "$(ARTIFACTS_DIR)/python"
+
+build-lambda-common-function:
+		cp -r $(HANDLER) "$(ARTIFACTS_DIR)/"
+
+build-lambda-common:
+		cp -r src "$(ARTIFACTS_DIR)/"
+
+build-HelloWorldFunction:
+		$(MAKE) HANDLER=src/handlers/app.py build-lambda-common-function
+
+build-IngestDataFunction:
+		$(MAKE) HANDLER=src/handlers/ingest.py build-lambda-common-function
+
