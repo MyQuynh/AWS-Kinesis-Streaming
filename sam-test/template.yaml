@@ -36,6 +36,14 @@ Parameters:
     MinValue: 1
     MaxValue: 128
     Description: "Maximum batch size in MB"
+  AthenaDatabaseName:
+    Type: String
+    Default: serverless_data_pipeline
+    Description: "The Athena database name"
+  AthenaTableName:
+    Type: String
+    Default: records
+    Description: "The Athena table name"
 
 Resources:
 
@@ -45,28 +53,34 @@ Resources:
       BuildMethod: makefile
     Properties:
       Handler: ingest.lambda_handler
-  
+      Policies:
+        - FirehoseCrudPolicy:
+            DeliveryStreamName: !Ref DeliveryStream
+      Events:
+        CheckWebsiteScheduledEvent:
+          Type: Schedule
+          Properties:
+            Schedule: rate(30 minutes)
+
   DeliveryStream:
     Type: AWS::KinesisFirehose::DeliveryStream
+    DependsOn:
+      - DeliveryStreamPolicy
     Properties:
+      DeliveryStreamName: "DeliveryStream"
       DeliveryStreamType: DirectPut
       ExtendedS3DestinationConfiguration:
         Prefix: !Ref FirehoseS3Prefix
-        BucketARN: !GetAtt S3Records.Arn
+        BucketARN: !Join 
+          - ''
+          - - 'arn:aws:s3:::'
+            - !Ref S3Records
         BufferingHints:
           IntervalInSeconds: !Ref FirehoseBufferingInterval
           SizeInMBs: !Ref FirehoseBufferingSize
         CompressionFormat: !Ref FirehoseCompressionFormat
         RoleARN: !GetAtt DeliveryStreamRole.Arn
-        ProcessingConfiguration:
-          Enabled: true
-          Processors:
-            - Type: Lambda
-              Parameters:
-                - ParameterName: LambdaArn
-                  ParameterValue: !GetAtt IngestDataFunction.Arn
-  
-  
+
   DeliveryStreamRole:
     Type: AWS::IAM::Role
     Properties:
@@ -100,39 +114,76 @@ Resources:
               - 's3:ListBucketMultipartUploads'
               - 's3:PutObject'
             Resource:
-              - !GetAtt S3Records.Arn
+              - !Join 
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref S3Records
               - !Join 
                 - ''
                 - - 'arn:aws:s3:::'
                   - !Ref S3Records
                   - '*'
-          - Effect: Allow
+  
+  CFNRoleFlights:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "glue.amazonaws.com"
             Action:
-              - 'lambda:InvokeFunction'
-              - 'lambda:GetFunctionConfiguration'
-            Resource:
-              - !GetAtt IngestDataFunction.Arn
+              - "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        -
+          PolicyName: "root"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Action: "*"
+                Resource: "*"
 
-  # KinesisStream:
-  #   Type: "AWS::Kinesis::Stream"
-  #   Properties:
-  #     ShardCount: 4
-
+  MyCrawler2:
+    Type: AWS::Glue::Crawler
+    Properties:
+      Name: "testcrawler1"
+      Role: !GetAtt CFNRoleFlights.Arn
+      DatabaseName: !Ref AthenaDatabaseName
+      Targets:
+        S3Targets:
+          - Path: !Ref S3Records
+      SchemaChangePolicy:
+        UpdateBehavior: "UPDATE_IN_DATABASE"
+        DeleteBehavior: "LOG"
+      Schedule:
+        ScheduleExpression: "cron(0/10 * ? * MON-FRI *)"
   
-  # DDBConsumer:
-  #   Type: "AWS::Kinesis::StreamConsumer"
-  #   Properties:
-  #     StreamARN: !GetAtt KinesisStream.Arn
-  #     ConsumerName: DDBConsumer
+  AthenaCreateDatabaseQuery:
+    Type: AWS::Athena::NamedQuery
+    Properties:
+      Description: Run this query to initialize the Athena database
+      QueryString: !Sub "CREATE DATABASE IF NOT EXISTS `${AthenaDatabaseName}`;"
+      Database: !Ref AthenaDatabaseName
 
-  # S3Consumer:
-  #   Type: "AWS::Kinesis::StreamConsumer"
-  #   Properties:
-  #     StreamARN: !GetAtt KinesisStream.Arn
-  #     ConsumerName: S3Consumer
-  
-  # DDBRecords:
-  #   Type: AWS::Serverless::SimpleTable
+  AthenaCreateTableQuery:
+    Type: AWS::Athena::NamedQuery
+    DependsOn:
+      - S3Records
+    Properties:
+      Description: Run this query to initialize the Athena table
+      QueryString: !Sub >
+        CREATE EXTERNAL TABLE IF NOT EXISTS `${AthenaDatabaseName}`.`${AthenaTableName}` (
+          `url` string,
+          `description` string,
+          `location` string
+        )
+      Database: !Ref AthenaDatabaseName
 
   S3Records:
     Type: AWS::S3::Bucket
@@ -233,3 +284,7 @@ Outputs:
   HelloWorldFunctionIamRole:
     Description: "Implicit IAM Role created for Hello World function"
     Value: !GetAtt HelloWorldFunctionRole.Arn
+  
+  BucketName:
+    Description: The bucket where data will be stored
+    Value: !Ref S3Records
