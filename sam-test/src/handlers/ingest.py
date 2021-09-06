@@ -55,7 +55,7 @@ def put_to_stream(image_url, description, location):
             'image_url': str(image_url),
             'description': str(description),
             'location': str(location)
-            }
+        }
 
 
     print(payload)

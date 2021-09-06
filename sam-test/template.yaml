@@ -19,6 +19,10 @@ Parameters:
     Type: String
     Default: firehose/
     Description: "The S3 Key prefix for Kinesis Firehose."
+  FirehoseS3PrefixTwitter:
+    Type: String
+    Default: twitter/
+    Description: "The S3 Key prefix for Kinesis Firehose Twitter."
   FirehoseCompressionFormat:
     Type: String
     Default: GZIP
@@ -61,6 +65,21 @@ Resources:
           Type: Schedule
           Properties:
             Schedule: rate(30 minutes)
+  
+  IngestTwitterDataFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      Handler: ingestTwitter.lambda_handler
+      Policies:
+        - FirehoseCrudPolicy:
+            DeliveryStreamName: !Ref DeliveryStreamTwitter
+      Events:
+        CheckWebsiteScheduledEvent:
+          Type: Schedule
+          Properties:
+            Schedule: rate(30 minutes)
 
   DeliveryStream:
     Type: AWS::KinesisFirehose::DeliveryStream
@@ -71,6 +90,25 @@ Resources:
       DeliveryStreamType: DirectPut
       ExtendedS3DestinationConfiguration:
         Prefix: !Ref FirehoseS3Prefix
+        BucketARN: !Join 
+          - ''
+          - - 'arn:aws:s3:::'
+            - !Ref S3Records
+        BufferingHints:
+          IntervalInSeconds: !Ref FirehoseBufferingInterval
+          SizeInMBs: !Ref FirehoseBufferingSize
+        CompressionFormat: !Ref FirehoseCompressionFormat
+        RoleARN: !GetAtt DeliveryStreamRole.Arn
+  
+  DeliveryStreamTwitter:
+    Type: AWS::KinesisFirehose::DeliveryStream
+    DependsOn:
+      - DeliveryStreamPolicy
+    Properties:
+      DeliveryStreamName: "DeliveryStreamTwitter"
+      DeliveryStreamType: DirectPut
+      ExtendedS3DestinationConfiguration:
+        Prefix: !Ref FirehoseS3PrefixTwitter
         BucketARN: !Join 
           - ''
           - - 'arn:aws:s3:::'
