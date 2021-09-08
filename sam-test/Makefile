@@ -21,11 +21,10 @@ help:
 venv virtualenv:
 	@ echo "Creating a new virtualenv..."
 	@ rm -rf venv || true
-	@ python3 -m venv venv
+	@ python -m venv venv
+	@ python -m pip install --upgrade pip
 	@ echo "Done, now you need to activate it. Run:"
 	@ echo "source venv/Scripts/activate"
-
-
 
 activate:
 	@ echo "Activating this Python3 Virtual Env:"
@@ -97,4 +96,7 @@ build-IngestDataFunction:
 
 build-IngestTwitterDataFunction:
 		$(MAKE) HANDLER=src/handlers/ingestTwitter.py build-lambda-common-function
+
+# build-IngestData2Function:
+# 		$(MAKE) HANDLER=src/handlers/ingest2.py build-lambda-common-function
 

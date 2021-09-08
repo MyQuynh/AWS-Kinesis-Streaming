@@ -10,9 +10,11 @@ Globals:
   Function:
     Layers:
       - !Ref RuntimeDependenciesLayer
-    Runtime: python3.7
+      - arn:aws:lambda:us-east-2:770693421928:layer:Klayers-python38-Pillow:13
+      - arn:aws:lambda:us-east-2:770693421928:layer:Klayers-python38-pycryptodome:6
+    Runtime: python3.8
     MemorySize: 128
-    Timeout: 100
+    Timeout: 900
 
 Parameters:
   FirehoseS3Prefix:
@@ -66,6 +68,19 @@ Resources:
           Properties:
             Schedule: rate(30 minutes)
   
+  # IngestData2Function:
+  #   Type: AWS::Serverless::Function
+  #   Metadata:
+  #     BuildMethod: makefile
+  #   Properties:
+  #     Handler: ingest2.lambda_handler
+  #     Events:
+  #       CheckWebsiteScheduledEvent:
+  #         Type: Schedule
+  #         Properties:
+  #           Schedule: rate(30 minutes)
+
+
   IngestTwitterDataFunction:
     Type: AWS::Serverless::Function
     Metadata:
@@ -225,6 +240,11 @@ Resources:
 
   S3Records:
     Type: AWS::S3::Bucket
+  
+  # KinesisStream:
+  #   Type: "AWS::Kinesis::Stream"
+  #   Properties:
+  #     ShardCount: 4
 
   RuntimeDependenciesLayer:
     Type: AWS::Serverless::LayerVersion
@@ -235,7 +255,7 @@ Resources:
       Description: Python Runtime dependencies for Lambdas
       ContentUri: ./
       CompatibleRuntimes:
-        - python3.7
+        - python3.8
       RetentionPolicy: Retain
 
   # # DynamoTable:
@@ -301,7 +321,7 @@ Resources:
       BuildMethod: makefile
     Properties:
       Handler: app.lambda_handler
-      Runtime: python3.7
+      Runtime: python3.8
       Events:
         HelloWorld:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
