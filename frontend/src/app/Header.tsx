@@ -11,12 +11,11 @@ import {
 import { HamburgerIcon } from '@chakra-ui/icons';
 
 interface HeaderProps {
-  style?: {
-    color: string;
-  };
+  bgColor: string;
+  color: string;
 }
 
-const Header: React.FC<HeaderProps> = ({ style }) => {
+const Header: React.FC<HeaderProps> = ({ bgColor, color }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const handleToggle = () => (isOpen ? onClose() : onOpen());
 
@@ -28,12 +27,12 @@ const Header: React.FC<HeaderProps> = ({ style }) => {
         justify="space-between"
         wrap="wrap"
         padding={6}
-        bg="teal.500"
-        color="white"
+        bg={bgColor}
+        color={color}
       >
         <Flex align="center" mr={5}>
           <Heading as="h1" size="lg" letterSpacing="tighter">
-            HashSociety
+            #HashSociety
           </Heading>
         </Flex>
         {/* Burger Menu on small screens */}

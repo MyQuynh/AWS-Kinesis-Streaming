@@ -1,15 +1,16 @@
+/* eslint-disable arrow-body-style */
 import React from 'react';
 import { ChakraProvider } from '@chakra-ui/react';
 import Header from './Header';
 
-function App() {
+const App = () => {
   return (
     <>
       <ChakraProvider>
-        <Header />
+        <Header bgColor="#ff6700" color="white" />
       </ChakraProvider>
     </>
   );
-}
+};
 
 export default App;
