@@ -31,7 +31,7 @@ PASSWORD = "rmit1234"
 	
 
 # The kinesis stream I defined in asw console
-stream_name = 'DeliveryStream'
+stream_name = 'DeliveryStream2'
 
 
 k_client = boto3.client('firehose', region_name='us-east-2')
@@ -62,7 +62,7 @@ def resizeImage(url):
 
 def lambda_handler(event, context):
 
-    listTrending  = trendingHashtag()
+    listTrending  = ["travel", "food", "animals", "selfie", "cars", "fitness", "babies", "wedding", "nature", "architecture"]
 
     for i in listTrending:
         
@@ -78,7 +78,7 @@ def lambda_handler(event, context):
             dictMedia = medias[k].dict()
             if (dictMedia['thumbnail_url'] == ""):
                 break
-            put_to_stream(getOnlyURL(str(dictMedia['thumbnail_url'])), generateHashtag(str(dictMedia['caption_text'])), str(dictMedia['caption_text']), resizeImage(str(dictMedia['thumbnail_url'])))
+            put_to_stream(getOnlyURL(str(dictMedia['thumbnail_url'])), generateHashtag(str(dictMedia['caption_text'])), str(dictMedia['caption_text'], resizeImage(str(dictMedia['thumbnail_url']))))
             time.sleep(10)
 
         # image = f"https://api.unsplash.com/photos/random?client_id={ACCESS_KEY}"
@@ -97,19 +97,19 @@ def lambda_handler(event, context):
         # wait for 1 second
         time.sleep(10)
 
-def trendingHashtag():
-    trendingHashtag = f"https://api.ritekit.com/v1/search/trending?green=1&latin=1"
+# def trendingHashtag():
+#     trendingHashtag = f"https://api.ritekit.com/v1/search/trending?green=1&latin=1"
 
-    trendingHashtagList = []
+#     trendingHashtagList = []
 
-    response = requests.get(trendingHashtag)
+#     response = requests.get(trendingHashtag)
 
-    response = response.json()
+#     response = response.json()
 
-    for i in (response['tags']):
-        trendingHashtagList.append(i['tag'])
+#     for i in (response['tags']):
+#         trendingHashtagList.append(i['tag'])
     
-    return trendingHashtagList
+#     return trendingHashtagList
 
 
 

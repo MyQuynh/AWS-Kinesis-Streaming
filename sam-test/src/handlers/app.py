@@ -4,6 +4,7 @@ import json
 
 
 def lambda_handler(event, context):
+
     """Sample pure Lambda function
 
     Parameters
@@ -32,11 +33,12 @@ def lambda_handler(event, context):
     #     print(e)
 
     #     raise e
+    tweet = event['body']
 
     return {
         "statusCode": 200,
         "body": json.dumps({
-            "message": "hello world",
+            "message": tweet,
             # "location": ip.text.replace("\n", "")
         }),
     }

@@ -5,7 +5,7 @@ SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
 .PHONY: build-RuntimeDependenciesLayer build-lambda-common
-.PHONY: build-CovidFunction build-IngestDataFunction build-IngestTwitterDataFunction
+.PHONY: build-CovidFunction build-IngestDataFunction build-IngestTwitterDataFunction build-IngestDataFunction2 build-GetPredictImageFunction build-GetPredictTextFunction
 
 HANDLER:= $(src/**/*.py)
 
@@ -94,9 +94,16 @@ build-HelloWorldFunction:
 build-IngestDataFunction:
 		$(MAKE) HANDLER=src/handlers/ingest.py build-lambda-common-function
 
+build-IngestDataFunction2:
+		$(MAKE) HANDLER=src/handlers/ingest3.py build-lambda-common-function
+
 build-IngestTwitterDataFunction:
 		$(MAKE) HANDLER=src/handlers/ingestTwitter.py build-lambda-common-function
 
-# build-IngestData2Function:
-# 		$(MAKE) HANDLER=src/handlers/ingest2.py build-lambda-common-function
+build-GetPredictImageFunction:
+		$(MAKE) HANDLER=src/handlers/predictImage.py build-lambda-common-function
+
+build-GetPredictTextFunction:
+		$(MAKE) HANDLER=src/handlers/predictText.py build-lambda-common-function
+
 

@@ -25,6 +25,10 @@ Parameters:
     Type: String
     Default: twitter/
     Description: "The S3 Key prefix for Kinesis Firehose Twitter."
+  FirehoseS3Prefix2:
+    Type: String
+    Default: firehose2/
+    Description: "The S3 Key prefix for Kinesis Firehose specific"
   FirehoseCompressionFormat:
     Type: String
     Default: GZIP
@@ -68,17 +72,46 @@ Resources:
           Properties:
             Schedule: rate(30 minutes)
   
-  # IngestData2Function:
-  #   Type: AWS::Serverless::Function
-  #   Metadata:
-  #     BuildMethod: makefile
-  #   Properties:
-  #     Handler: ingest2.lambda_handler
-  #     Events:
-  #       CheckWebsiteScheduledEvent:
-  #         Type: Schedule
-  #         Properties:
-  #           Schedule: rate(30 minutes)
+  IngestDataFunction2:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      Handler: ingest3.lambda_handler
+      Policies:
+        - FirehoseCrudPolicy:
+            DeliveryStreamName: !Ref DeliveryStream2
+      Events:
+        CheckWebsiteScheduledEvent:
+          Type: Schedule
+          Properties:
+            Schedule: rate(30 minutes)
+  
+  GetPredictTextFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      Handler: predictText.lambda_handler
+      Events:
+        GetPredictTextAPI:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /predictText
+            Method: post
+  
+  GetPredictImageFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      Handler: predictImage.lambda_handler
+      Events:
+        GetPredictTextAPI:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /predictImage
+            Method: post
 
 
   IngestTwitterDataFunction:
@@ -124,6 +157,25 @@ Resources:
       DeliveryStreamType: DirectPut
       ExtendedS3DestinationConfiguration:
         Prefix: !Ref FirehoseS3PrefixTwitter
+        BucketARN: !Join 
+          - ''
+          - - 'arn:aws:s3:::'
+            - !Ref S3Records
+        BufferingHints:
+          IntervalInSeconds: !Ref FirehoseBufferingInterval
+          SizeInMBs: !Ref FirehoseBufferingSize
+        CompressionFormat: !Ref FirehoseCompressionFormat
+        RoleARN: !GetAtt DeliveryStreamRole.Arn
+  
+  DeliveryStream2:
+    Type: AWS::KinesisFirehose::DeliveryStream
+    DependsOn:
+      - DeliveryStreamPolicy
+    Properties:
+      DeliveryStreamName: "DeliveryStream2"
+      DeliveryStreamType: DirectPut
+      ExtendedS3DestinationConfiguration:
+        Prefix: !Ref FirehoseS3Prefix2
         BucketARN: !Join 
           - ''
           - - 'arn:aws:s3:::'
@@ -327,7 +379,7 @@ Resources:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
             Path: /hello
-            Method: get
+            Method: post
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
