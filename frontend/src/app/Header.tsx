@@ -1,14 +1,8 @@
 import React from 'react';
-import {
-  Box,
-  Stack,
-  Heading,
-  Flex,
-  Text,
-  Button,
-  useDisclosure,
-} from '@chakra-ui/react';
+import { Link, NavLink } from 'react-router-dom';
+import { Box, Stack, Heading, Flex, useDisclosure } from '@chakra-ui/react';
 import { HamburgerIcon } from '@chakra-ui/icons';
+import './Header.css';
 
 interface HeaderProps {
   bgColor: string;
@@ -31,9 +25,11 @@ const Header: React.FC<HeaderProps> = ({ bgColor, color }) => {
         color={color}
       >
         <Flex align="center" mr={5}>
-          <Heading as="h1" size="lg" letterSpacing="tighter">
-            #HashSociety
-          </Heading>
+          <Link to="/">
+            <Heading as="h1" size="lg" letterSpacing="tighter">
+              #HashSociety
+            </Heading>
+          </Link>
         </Flex>
         {/* Burger Menu on small screens */}
         <Box display={{ base: 'block', md: 'none' }} onClick={handleToggle}>
@@ -49,8 +45,26 @@ const Header: React.FC<HeaderProps> = ({ bgColor, color }) => {
           flexGrow={1}
           mt={{ base: 4, md: 0 }}
         >
-          <Text>Home</Text>
-          <Text>Dashboard</Text>
+          <NavLink
+            to="/hashtagger"
+            className="link-item"
+            activeClassName="selected"
+            style={{
+              marginLeft: 20,
+            }}
+          >
+            Hashtagger
+          </NavLink>
+          <NavLink
+            to="/wise-insights"
+            className="link-item"
+            activeClassName="selected"
+            style={{
+              marginLeft: 20,
+            }}
+          >
+            Wise Insights
+          </NavLink>
         </Stack>
 
         <Box
