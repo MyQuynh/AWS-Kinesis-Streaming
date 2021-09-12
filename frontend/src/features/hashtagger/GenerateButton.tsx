@@ -12,6 +12,7 @@ const GenerateButton: React.FC = () => {
         mt={2}
         _hover={{ backgroundColor: 'brand.400' }}
         rounded="none"
+        type="submit"
       >
         <Icon color="#00000" as={FaArrowAltCircleRight} w={19} h={20} />
         <Text fontSize={14} color="#ffffff" fontWeight={600} ml={2}>

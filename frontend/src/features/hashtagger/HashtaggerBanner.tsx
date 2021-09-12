@@ -3,7 +3,7 @@ import { Box, Image, Grid, GridItem, Heading, Text } from '@chakra-ui/react';
 import TeamworkImage from '../../assets/teamwork-illustration.png';
 
 // eslint-disable-next-line arrow-body-style
-const Banner: React.FC = () => {
+const HashtaggerBanner: React.FC = () => {
   return (
     <>
       <Grid templateRows="1fr" templateColumns="repeat(2, minmax(0, 1fr))">
@@ -34,4 +34,4 @@ const Banner: React.FC = () => {
   );
 };
 
-export default Banner;
+export default HashtaggerBanner;

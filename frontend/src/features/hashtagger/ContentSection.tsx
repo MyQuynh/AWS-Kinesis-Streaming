@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { ReactChildren, ReactElement, ReactNode } from 'react';
 import { Container, Grid, GridItem } from '@chakra-ui/react';
 import { FaAmilia, FaFileImage, FaLink } from 'react-icons/fa';
 import SideMenu, { MenuItem } from './SideMenu';
-import DynamicInput from './DynamicInput';
 
 const menuItems: MenuItem[] = [
   {
@@ -22,12 +21,12 @@ const menuItems: MenuItem[] = [
   },
 ];
 
-export interface SectionProps {
-  type: string;
+interface ContentSectionProps {
+  children: ReactNode;
 }
 
 // eslint-disable-next-line arrow-body-style
-const Section: React.FC<SectionProps> = ({ type }) => {
+const ContentSection: React.FC<ContentSectionProps> = ({ children }) => {
   return (
     <>
       <Container maxW="container.xl" mb={2}>
@@ -36,7 +35,7 @@ const Section: React.FC<SectionProps> = ({ type }) => {
             <SideMenu items={menuItems} />
           </GridItem>
           <GridItem rowSpan={1} colSpan={1}>
-            <DynamicInput type={type} />
+            {children}
           </GridItem>
         </Grid>
       </Container>
@@ -44,4 +43,4 @@ const Section: React.FC<SectionProps> = ({ type }) => {
   );
 };
 
-export default Section;
+export default ContentSection;
