@@ -1,4 +1,11 @@
 import json
+import string
+import argparse
+import re
+import nltk
+from nltk.corpus import stopwords 
+from nltk.stem.wordnet import WordNetLemmatizer
+import gensim
 
 # import requests
 

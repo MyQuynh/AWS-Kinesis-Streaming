@@ -8,11 +8,6 @@ Description: >
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    Layers:
-      - !Ref RuntimeDependenciesLayer
-      - arn:aws:lambda:us-east-2:770693421928:layer:Klayers-python38-Pillow:13
-      - arn:aws:lambda:us-east-2:770693421928:layer:Klayers-python38-pycryptodome:6
-    Runtime: python3.8
     MemorySize: 128
     Timeout: 900
 
@@ -58,26 +53,70 @@ Parameters:
 Resources:
 
   IngestDataFunction:
-    Type: AWS::Serverless::Function
-    Metadata:
-      BuildMethod: makefile
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      Handler: ingest.lambda_handler
+      PackageType: Image
+      ImageConfig:
+        Command: ["ingest.handler"]
+      MemorySize: 1536
+      Timeout: 900
       Policies:
         - FirehoseCrudPolicy:
             DeliveryStreamName: !Ref DeliveryStream
       Events:
-        CheckWebsiteScheduledEvent:
+        CheckWebsiteScheduledEvent1:
           Type: Schedule
           Properties:
             Schedule: rate(30 minutes)
+    Metadata:
+      DockerTag: python3.8-v1
+      DockerContext: ./src/handlers/IngestImageData
+      Dockerfile: Dockerfile
+  
+  IngestTwitterFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      PackageType: Image
+      ImageConfig:
+        Command: ["ingestTwitter.handler"]
+      MemorySize: 1536
+      Timeout: 500
+      Policies:
+        - FirehoseCrudPolicy:
+            DeliveryStreamName: !Ref DeliveryStreamTwitter
+      Events:
+        CheckWebsiteScheduledEvent1:
+          Type: Schedule
+          Properties:
+            Schedule: rate(30 minutes)
+    Metadata:
+      DockerTag: python3.8-v2
+      DockerContext: ./src/handlers/IngestTweet
+      Dockerfile: Dockerfile
+
+  # IngestDataFunction:
+  #   Type: AWS::Serverless::Function
+  #   Metadata:
+  #     BuildMethod: makefile
+  #   Properties:
+  #     Handler: ingest.lambda_handler
+  #     Policies:
+  #       - FirehoseCrudPolicy:
+  #           DeliveryStreamName: !Ref DeliveryStream
+  #     Events:
+  #       CheckWebsiteScheduledEvent:
+  #         Type: Schedule
+  #         Properties:
+  #           Schedule: rate(30 minutes)
   
   IngestDataFunction2:
     Type: AWS::Serverless::Function
-    Metadata:
-      BuildMethod: makefile
     Properties:
-      Handler: ingest3.lambda_handler
+      PackageType: Image
+      ImageConfig:
+        Command: ["ingest3.handler"]
+      MemorySize: 1536
+      Timeout: 500
       Policies:
         - FirehoseCrudPolicy:
             DeliveryStreamName: !Ref DeliveryStream2
@@ -86,48 +125,84 @@ Resources:
           Type: Schedule
           Properties:
             Schedule: rate(30 minutes)
+    Metadata:
+      DockerTag: python3.8-v3
+      DockerContext: ./src/handlers/IngestImageSpecificData
+      Dockerfile: Dockerfile
   
   GetPredictTextFunction:
     Type: AWS::Serverless::Function
-    Metadata:
-      BuildMethod: makefile
     Properties:
-      Handler: predictText.lambda_handler
+      PackageType: Image
+      ImageConfig:
+        Command: ["predictText.handler"]
       Events:
         GetPredictTextAPI:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Type: Api
           Properties:
             Path: /predictText
             Method: post
+    Metadata:
+      DockerTag: python3.8-v4
+      DockerContext: ./src/handlers/PredictText
+      Dockerfile: Dockerfile
+    
+  GetPredictTextUrlFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      ImageConfig:
+        Command: ["predictTextUrl.handler"]
+      Events:
+        GetPredictTextAPI:
+          Type: Api
+          Properties:
+            Path: /predictTextUrl
+            Method: post
+    Metadata:
+      DockerTag: python3.8-v5
+      DockerContext: ./src/handlers/PredictTextUrl
+      Dockerfile: Dockerfile
   
   GetPredictImageFunction:
     Type: AWS::Serverless::Function
-    Metadata:
-      BuildMethod: makefile
     Properties:
-      Handler: predictImage.lambda_handler
+      PackageType: Image
+      ImageConfig:
+        Command: ["predictImage.handler"]
       Events:
-        GetPredictTextAPI:
+        GetPredictImageAPI:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
             Path: /predictImage
             Method: post
-
-
-  IngestTwitterDataFunction:
-    Type: AWS::Serverless::Function
     Metadata:
-      BuildMethod: makefile
-    Properties:
-      Handler: ingestTwitter.lambda_handler
-      Policies:
-        - FirehoseCrudPolicy:
-            DeliveryStreamName: !Ref DeliveryStreamTwitter
-      Events:
-        CheckWebsiteScheduledEvent:
-          Type: Schedule
-          Properties:
-            Schedule: rate(30 minutes)
+      DockerTag: python3.8-v6
+      DockerContext: ./src/handlers/PredictImage
+      Dockerfile: Dockerfile
+
+
+  # IngestTwitterDataFunction:
+  #   Type: AWS::Serverless::Function
+  #   Metadata:
+  #     BuildMethod: makefile
+  #   Properties:
+  #     # Layers:
+  #     #   - !Ref RuntimeDependenciesLayer
+  #     #   - arn:aws:lambda:us-east-2:770693421928:layer:Klayers-python38-nltk:46
+  #     #   - !Ref GensimLayer
+  #     #   - arn:aws:lambda:us-east-2:770693421928:layer:Klayers-python38-tweepy:1
+  #     #   - arn:aws:lambda:us-east-2:770693421928:layer:Klayers-python38-numpy:20
+  #     #   - arn:aws:lambda:us-east-2:770693421928:layer:Klayers-python38-scipy:1
+  #     Handler: ingestTwitter.lambda_handler
+  #     Policies:
+  #       - FirehoseCrudPolicy:
+  #           DeliveryStreamName: !Ref DeliveryStreamTwitter
+  #     Events:
+  #       CheckWebsiteScheduledEvent:
+  #         Type: Schedule
+  #         Properties:
+  #           Schedule: rate(30 minutes)
 
   DeliveryStream:
     Type: AWS::KinesisFirehose::DeliveryStream
@@ -176,7 +251,7 @@ Resources:
       DeliveryStreamType: DirectPut
       ExtendedS3DestinationConfiguration:
         Prefix: !Ref FirehoseS3Prefix2
-        BucketARN: !Join 
+        BucketARN: !Join
           - ''
           - - 'arn:aws:s3:::'
             - !Ref S3Records
@@ -228,75 +303,23 @@ Resources:
                 - - 'arn:aws:s3:::'
                   - !Ref S3Records
                   - '*'
-  
-  CFNRoleFlights:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          -
-            Effect: "Allow"
-            Principal:
-              Service:
-                - "glue.amazonaws.com"
-            Action:
-              - "sts:AssumeRole"
-      Path: "/"
-      Policies:
-        -
-          PolicyName: "root"
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              -
-                Effect: "Allow"
-                Action: "*"
-                Resource: "*"
-
-  MyCrawler2:
-    Type: AWS::Glue::Crawler
-    Properties:
-      Name: "testcrawler1"
-      Role: !GetAtt CFNRoleFlights.Arn
-      DatabaseName: !Ref AthenaDatabaseName
-      Targets:
-        S3Targets:
-          - Path: !Ref S3Records
-      SchemaChangePolicy:
-        UpdateBehavior: "UPDATE_IN_DATABASE"
-        DeleteBehavior: "LOG"
-      Schedule:
-        ScheduleExpression: "cron(0/10 * ? * MON-FRI *)"
-  
-  AthenaCreateDatabaseQuery:
-    Type: AWS::Athena::NamedQuery
-    Properties:
-      Description: Run this query to initialize the Athena database
-      QueryString: !Sub "CREATE DATABASE IF NOT EXISTS `${AthenaDatabaseName}`;"
-      Database: !Ref AthenaDatabaseName
-
-  AthenaCreateTableQuery:
-    Type: AWS::Athena::NamedQuery
-    DependsOn:
-      - S3Records
-    Properties:
-      Description: Run this query to initialize the Athena table
-      QueryString: !Sub >
-        CREATE EXTERNAL TABLE IF NOT EXISTS `${AthenaDatabaseName}`.`${AthenaTableName}` (
-          `url` string,
-          `description` string,
-          `location` string
-        )
-      Database: !Ref AthenaDatabaseName
 
   S3Records:
     Type: AWS::S3::Bucket
   
-  # KinesisStream:
-  #   Type: "AWS::Kinesis::Stream"
-  #   Properties:
-  #     ShardCount: 4
+  MyRepository: 
+    Type: AWS::ECR::Repository
+    Properties: 
+      RepositoryName: "test-repository-1"
+      ImageScanningConfiguration: 
+        ScanOnPush: "true"
+  
+  MyRepository2: 
+    Type: AWS::ECR::Repository
+    Properties: 
+      RepositoryName: "test-repository-2"
+      ImageScanningConfiguration: 
+        ScanOnPush: "true"
 
   RuntimeDependenciesLayer:
     Type: AWS::Serverless::LayerVersion
@@ -309,6 +332,42 @@ Resources:
       CompatibleRuntimes:
         - python3.8
       RetentionPolicy: Retain
+
+  # TfRuntimeLayer:
+  #   Type: AWS::Serverless::LayerVersion
+  #   Properties:
+  #     LayerName: TfRuntime
+  #     Description: TF Runtime Layer
+  #     ContentUri: layers/tensorflow/
+  #     CompatibleRuntimes:
+  #       - python3.8
+  #     RetentionPolicy: Retain
+  #   Metadata:
+  #     BuildMethod: python3.8
+
+  GensimLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: Gensim
+      Description: Gensim Layer
+      ContentUri: layers/gensim/
+      CompatibleRuntimes:
+        - python3.8
+      RetentionPolicy: Retain
+    Metadata:
+      BuildMethod: makefile
+  
+  # ScipyLayer:
+  #   Type: AWS::Serverless::LayerVersion
+  #   Properties:
+  #     LayerName: Scipy
+  #     Description: Scipy Layer
+  #     ContentUri: layers/scipy/
+  #     CompatibleRuntimes:
+  #       - python3.8
+  #     RetentionPolicy: Retain
+  #   Metadata:
+  #     BuildMethod: makefile
 
   # # DynamoTable:
   # #   Type: AWS::DynamoDB::Table
