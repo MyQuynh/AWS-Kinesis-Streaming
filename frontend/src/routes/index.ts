@@ -4,6 +4,7 @@ import HashtaggerCaptionPage from '../features/hashtagger/HashtaggerCaptionPage'
 import HashtaggerImagePage from '../features/hashtagger/HashtaggerImagePage';
 import HashtaggerURLPage from '../features/hashtagger/HashtaggerURLPage';
 import LandingPage from '../features/landing/LandingPage';
+import WiseInsightsPage from '../features/wise-insights/WiseInsightsPage';
 
 const routes: RouteProps[] = [
   {
@@ -29,6 +30,11 @@ const routes: RouteProps[] = [
   {
     path: '/hashtagger/url',
     component: HashtaggerURLPage,
+    exact: true,
+  },
+  {
+    path: '/wise-insights',
+    component: WiseInsightsPage,
     exact: true,
   },
   {

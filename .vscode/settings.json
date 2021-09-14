@@ -1,4 +1,5 @@
 {
   "eslint.workingDirectories": ["frontend"],
-  "cSpell.words": ["Hashtagger"]
+  "cSpell.words": ["Hashtagger"],
+  "typescript.tsdk": "frontend/node_modules/typescript/lib"
 }

@@ -5,6 +5,7 @@ import axios, { AxiosError } from 'axios';
 import type { ThunkLoadingState } from '../../app/store';
 import { API_GATEWAY_URL } from '../../app/config';
 
+/* Error message type */
 export interface KnownError {
   errorMessage: string;
 }
@@ -13,13 +14,14 @@ export interface KnownError {
 export interface HashtaggerResponseData {
   hashtags: string[];
 }
-
+/* Type of initial state for Hashtagger features */
 export interface HashtaggerState {
   status: ThunkLoadingState;
   data: string[];
   error: null | object | string;
 }
 
+/* Initial hashtagger state */
 const initialState: HashtaggerState = {
   status: 'idle',
   data: [],
@@ -27,7 +29,7 @@ const initialState: HashtaggerState = {
 };
 
 /**
- * Upload images to S3 for hashtag processing
+ * Upload Image to S3 for hashtag processing
  * @param {File} file - Blob file input uploaded
  * @param {GetThunkAPI<{rejectedValue: KnownError}>} thunkApi - Thunk's API used for returning rejected value on error
  */
@@ -37,7 +39,7 @@ export const fetchImageHashtags = createAsyncThunk<
   {
     rejectValue: KnownError;
   }
->('hashtagger/uploadPhoto', async (file: File, thunkApi) => {
+>('hashtagger/uploadPhoto', async (image: File, thunkApi) => {
   let response;
   try {
     // TODO: Remember to put in API body for File transfer
@@ -78,12 +80,39 @@ export const fetchCaptionHashtags = createAsyncThunk<
   return response?.data as HashtaggerResponseData;
 });
 
+/**
+ * Upload URL to API Gateway for generating hashtags
+ * @param {string} caption - Caption input for processing purpose
+ * @param {GetThunkAPI<{rejectedValue: KnownError}>} thunkApi - Thunk's API used for returning rejected value on error
+ */
+export const fetchURLHashtags = createAsyncThunk<
+  HashtaggerResponseData,
+  string,
+  {
+    rejectValue: KnownError;
+  }
+>('hashtagger/uploadURL', async (url: string, thunkApi) => {
+  let response;
+  try {
+    // TODO: Remember to put in API body for URL transfer and processing
+    response = await axios.post(`${API_GATEWAY_URL}/process-url`);
+  } catch (error: unknown | Error | AxiosError) {
+    // eslint-disable-next-line no-console
+    console.log(error);
+    if (axios.isAxiosError(error)) {
+      return thunkApi.rejectWithValue(error.response?.data as KnownError);
+    }
+  }
+  return response?.data as HashtaggerResponseData;
+});
+
 const hashtaggerSlice = createSlice({
   name: 'hashtagger',
   initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
+      /* Image section */
       .addCase(fetchImageHashtags.pending, (state) => {
         state.status = 'loading';
       })
@@ -99,6 +128,7 @@ const hashtaggerSlice = createSlice({
           state.error = action.error;
         }
       })
+      /* Caption section */
       .addCase(fetchCaptionHashtags.pending, (state) => {
         state.status = 'loading';
       })
@@ -107,6 +137,22 @@ const hashtaggerSlice = createSlice({
         state.data = action.payload.hashtags;
       })
       .addCase(fetchCaptionHashtags.rejected, (state, action) => {
+        state.status = 'failed';
+        if (action.payload) {
+          state.error = action.payload.errorMessage;
+        } else {
+          state.error = action.error;
+        }
+      })
+      /* URL section */
+      .addCase(fetchURLHashtags.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchURLHashtags.fulfilled, (state, action) => {
+        state.status = 'idle';
+        state.data = action.payload.hashtags;
+      })
+      .addCase(fetchURLHashtags.rejected, (state, action) => {
         state.status = 'failed';
         if (action.payload) {
           state.error = action.payload.errorMessage;
