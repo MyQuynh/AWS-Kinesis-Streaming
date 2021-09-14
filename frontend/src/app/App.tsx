@@ -1,7 +1,7 @@
 /* eslint-disable arrow-body-style */
 import React from 'react';
 import '@fontsource/poppins';
-import { BrowserRouter, Route, RouteProps } from 'react-router-dom';
+import { BrowserRouter, Route, RouteProps, Switch } from 'react-router-dom';
 import { ChakraProvider, extendTheme } from '@chakra-ui/react';
 import Header from './Header';
 import Footer from './Footer';
@@ -29,10 +29,12 @@ const App = () => {
       <ChakraProvider theme={theme}>
         <BrowserRouter>
           <Header bgColor="#ff6700" color="#ffffff" />
-          {routes.map((route: RouteProps) => (
-            // eslint-disable-next-line react/jsx-props-no-spreading
-            <Route key={route.path?.toString()} {...route} />
-          ))}
+          <Switch>
+            {routes.map((route: RouteProps) => (
+              // eslint-disable-next-line react/jsx-props-no-spreading
+              <Route key={route.path?.toString()} {...route} />
+            ))}
+          </Switch>
           <Footer />
         </BrowserRouter>
       </ChakraProvider>

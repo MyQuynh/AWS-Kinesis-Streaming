@@ -9,6 +9,7 @@ export interface KnownError {
   errorMessage: string;
 }
 
+/* Hashtagger responses and data */
 export interface HashtaggerResponseData {
   hashtags: string[];
 }
@@ -27,18 +28,45 @@ const initialState: HashtaggerState = {
 
 /**
  * Upload images to S3 for hashtag processing
- * @param {any} file - Blob file input uploaded
+ * @param {File} file - Blob file input uploaded
  * @param {GetThunkAPI<{rejectedValue: KnownError}>} thunkApi - Thunk's API used for returning rejected value on error
  */
 export const fetchImageHashtags = createAsyncThunk<
   HashtaggerResponseData,
-  any,
+  File,
   {
     rejectValue: KnownError;
   }
->('hashtagger/uploadPhoto', async (file, thunkApi) => {
+>('hashtagger/uploadPhoto', async (file: File, thunkApi) => {
   let response;
   try {
+    // TODO: Remember to put in API body for File transfer
+    response = await axios.post(`${API_GATEWAY_URL}/process-photos`);
+  } catch (error: unknown | Error | AxiosError) {
+    // eslint-disable-next-line no-console
+    console.log(error);
+    if (axios.isAxiosError(error)) {
+      return thunkApi.rejectWithValue(error.response?.data as KnownError);
+    }
+  }
+  return response?.data as HashtaggerResponseData;
+});
+
+/**
+ * Upload Caption to API Gateway for generating hashtags
+ * @param {string} caption - Caption input for processing purpose
+ * @param {GetThunkAPI<{rejectedValue: KnownError}>} thunkApi - Thunk's API used for returning rejected value on error
+ */
+export const fetchCaptionHashtags = createAsyncThunk<
+  HashtaggerResponseData,
+  string,
+  {
+    rejectValue: KnownError;
+  }
+>('hashtagger/uploadCaption', async (caption: string, thunkApi) => {
+  let response;
+  try {
+    // TODO: Remember to put in API body for Caption transfer and processing
     response = await axios.post(`${API_GATEWAY_URL}/process-photos`);
   } catch (error: unknown | Error | AxiosError) {
     // eslint-disable-next-line no-console
@@ -64,6 +92,21 @@ const hashtaggerSlice = createSlice({
         state.data = action.payload.hashtags;
       })
       .addCase(fetchImageHashtags.rejected, (state, action) => {
+        state.status = 'failed';
+        if (action.payload) {
+          state.error = action.payload.errorMessage;
+        } else {
+          state.error = action.error;
+        }
+      })
+      .addCase(fetchCaptionHashtags.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchCaptionHashtags.fulfilled, (state, action) => {
+        state.status = 'idle';
+        state.data = action.payload.hashtags;
+      })
+      .addCase(fetchCaptionHashtags.rejected, (state, action) => {
         state.status = 'failed';
         if (action.payload) {
           state.error = action.payload.errorMessage;

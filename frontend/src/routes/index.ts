@@ -1,4 +1,5 @@
 import { RouteProps } from 'react-router-dom';
+import NotFoundPage from '../features/error/NotFoundPage';
 import HashtaggerCaptionPage from '../features/hashtagger/HashtaggerCaptionPage';
 import HashtaggerImagePage from '../features/hashtagger/HashtaggerImagePage';
 import HashtaggerURLPage from '../features/hashtagger/HashtaggerURLPage';
@@ -16,11 +17,6 @@ const routes: RouteProps[] = [
     exact: true,
   },
   {
-    path: '/hashtagger',
-    component: HashtaggerCaptionPage,
-    exact: true,
-  },
-  {
     path: '/hashtagger/caption',
     component: HashtaggerCaptionPage,
     exact: true,
@@ -34,6 +30,10 @@ const routes: RouteProps[] = [
     path: '/hashtagger/url',
     component: HashtaggerURLPage,
     exact: true,
+  },
+  {
+    path: '*',
+    component: NotFoundPage,
   },
 ];
 

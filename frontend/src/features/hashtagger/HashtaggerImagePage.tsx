@@ -2,11 +2,13 @@ import React from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
-import HashtaggerBanner from './HashtaggerBanner';
+import HeadBanner from '../../components/HeadBanner';
 import ContentSection from './ContentSection';
 import InputImage from './InputImage';
-import type { InputFormValueProps } from './InputImage';
+import type { InputFormImageProps } from './InputImage';
 import GenerateButton from './GenerateButton';
+import ErrorMessageForm from './ErrorMessageForm';
+import HashtaggerBanner from './HashtaggerBanner';
 
 // Yup's file validation schema
 const fileValidationSchema = yup.object({
@@ -33,13 +35,13 @@ const HashtaggerImagePage: React.FC = () => {
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm<InputFormValueProps>({
+  } = useForm<InputFormImageProps>({
     defaultValues: undefined,
-    mode: 'onSubmit',
+    mode: 'onChange',
     resolver: yupResolver(fileValidationSchema),
   });
 
-  const submitImageHandler: SubmitHandler<InputFormValueProps> = (data) => {
+  const submitImageHandler: SubmitHandler<InputFormImageProps> = (data) => {
     console.log('++ Submitted File ++');
     console.log(data.file[0]);
   };
@@ -48,6 +50,7 @@ const HashtaggerImagePage: React.FC = () => {
     <>
       <HashtaggerBanner />
       <ContentSection>
+        {/* File upload form */}
         <form onSubmit={handleSubmit(submitImageHandler)}>
           <InputImage
             formProps={{
@@ -56,11 +59,14 @@ const HashtaggerImagePage: React.FC = () => {
               defaultValue: undefined,
             }}
             multiple={false}
+            accept="image/*"
           />
-          <GenerateButton />
-          {errors.file?.type === 'required' && <p>{errors.file.message}</p>}
-          {errors.file?.type === 'fileSize' && <p>{errors.file.message}</p>}
-          {errors.file?.type === 'fileType' && <p>{errors.file.message}</p>}
+          {(errors.file?.type === 'required' ||
+            errors.file?.type === 'fileSize' ||
+            errors.file?.type === 'fileType') && (
+            <ErrorMessageForm message={errors.file?.message} />
+          )}
+          <GenerateButton pl={3} disabled={!!errors.file} />
         </form>
       </ContentSection>
     </>

@@ -46,7 +46,7 @@ const Header: React.FC<HeaderProps> = ({ bgColor, color }) => {
           mt={{ base: 4, md: 0 }}
         >
           <NavLink
-            to="/hashtagger"
+            to="/hashtagger/caption"
             className="link-item"
             activeClassName="selected"
             style={{
