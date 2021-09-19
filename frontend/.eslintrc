@@ -5,12 +5,15 @@
     "project": "tsconfig.json"
   },
   "rules": {
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }
+    ],
     "linebreak-style": 0,
     "eslint linebreak-style": [0, "error", "windows"],
     "react/prop-types": "off",
     "react/jsx-one-expression-per-line": "off",
     "no-unused-vars": "off",
-    "@typescript-eslint/no-unused-vars": ["warn"],
     "react/jsx-filename-extension": [
       1,
       {

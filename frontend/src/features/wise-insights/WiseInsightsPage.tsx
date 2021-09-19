@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useEffect } from 'react';
 import {
   Box,
   Grid,
@@ -12,40 +12,34 @@ import HeadBanner from '../../components/HeadBanner';
 import WordCloud from './WordCloud';
 import PopularHashtagBarChart from './PopularHashtagBarChart';
 import SentimentGauge from './SentimentGauge';
-
-const mockDataWordCloud = [
-  {
-    text: 'told',
-    value: 64,
-  },
-  {
-    text: 'mistake',
-    value: 11,
-  },
-  {
-    text: 'thought',
-    value: 16,
-  },
-  {
-    text: 'bad',
-    value: 30,
-  },
-  {
-    text: 'love',
-    value: 65,
-  },
-  {
-    text: 'success',
-    value: 40,
-  },
-  {
-    text: 'RMIT',
-    value: 25,
-  },
-];
+import { useAppDispatch, useAppSelector } from '../../hooks';
+import { fetchTwitterHashtags } from './wiseInsightsSlice';
+import LoadingThreeDot from '../../components/LoadingThreeDot';
 
 // eslint-disable-next-line arrow-body-style
 const WiseInsightsPage: React.FC = () => {
+  const wiseInsights = useAppSelector((state) => state.wiseInsights);
+  const dispatch = useAppDispatch();
+
+  const filterTopHashtags = useCallback(
+    // eslint-disable-next-line consistent-return
+    (top: number) => {
+      if (wiseInsights.data.length > 0) {
+        const sortedData = wiseInsights.data
+          .slice()
+          .sort((a, b) => b.value - a.value);
+        console.log(sortedData);
+        return sortedData.slice(0, top);
+      }
+      return wiseInsights.data;
+    },
+    [wiseInsights.data]
+  );
+
+  useEffect(() => {
+    dispatch(fetchTwitterHashtags(null));
+  }, [dispatch]);
+
   return (
     <>
       <HeadBanner
@@ -75,8 +69,21 @@ const WiseInsightsPage: React.FC = () => {
                 Hashtags Word Cloud
               </Heading>
             </Box>
-            <Flex justifyContent="center" p={2}>
-              <WordCloud data={mockDataWordCloud} />
+            <Flex justifyContent="center" justify="center" p={3}>
+              <Box>
+                {
+                  {
+                    idle: <></>,
+                    pending: <LoadingThreeDot />,
+                    fulfilled: <WordCloud data={wiseInsights.data} />,
+                    rejected: (
+                      <>
+                        <p>Error!!!!!!</p>
+                      </>
+                    ),
+                  }[wiseInsights.status]
+                }
+              </Box>
             </Flex>
           </GridItem>
           <GridItem
@@ -94,12 +101,29 @@ const WiseInsightsPage: React.FC = () => {
               </Heading>
             </Box>
             <Box pl={10}>
-              <PopularHashtagBarChart
-                data={mockDataWordCloud}
-                x="text"
-                y="value"
-                horizontal
-              />
+              {
+                {
+                  idle: <></>,
+                  pending: (
+                    <Flex justifyContent="center" justify="center" mt={3}>
+                      <LoadingThreeDot />
+                    </Flex>
+                  ),
+                  fulfilled: (
+                    <PopularHashtagBarChart
+                      data={filterTopHashtags(10)}
+                      x="text"
+                      y="value"
+                      horizontal
+                    />
+                  ),
+                  rejected: (
+                    <>
+                      <p>Error!!!</p>
+                    </>
+                  ),
+                }[wiseInsights.status]
+              }
             </Box>
           </GridItem>
           <GridItem

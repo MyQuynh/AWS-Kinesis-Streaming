@@ -5,7 +5,7 @@ import { Spinner } from '@chakra-ui/react';
 const LoadingSpinner: React.FC = () => {
   return (
     <>
-      <Spinner />
+      <Spinner size="xl" color="brand.500" />
     </>
   );
 };

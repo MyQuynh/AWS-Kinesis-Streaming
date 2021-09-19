@@ -1,5 +1,10 @@
 import { useRef, useEffect, useCallback } from 'react';
 
+/**
+ *
+ * @param func - Callback debounce function
+ * @param waitFor - Debounce time in milliseconds (ms)
+ */
 const useDebounce = <F extends (...args: any) => any>(
   func: F,
   waitFor: number

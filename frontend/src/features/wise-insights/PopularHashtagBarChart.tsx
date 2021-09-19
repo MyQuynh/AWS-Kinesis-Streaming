@@ -6,10 +6,10 @@ import {
   VictoryAxis,
   VictoryLabel,
 } from 'victory';
-import { HashtagData } from './WordCloud';
+import { WiseInsightsData } from './wiseInsightsSlice';
 
 interface PopularHashtagBarChartProps {
-  data: HashtagData[];
+  data: WiseInsightsData[];
   x: string;
   y: string;
   horizontal: boolean;
@@ -35,7 +35,7 @@ const PopularHashtagBarChart: React.FC<PopularHashtagBarChartProps> = ({
         height={h}
       >
         <VictoryAxis
-          tickValues={data.map((t: HashtagData) => t.text)}
+          tickValues={data.map((t: WiseInsightsData) => t.text)}
           style={{
             grid: { stroke: 'none' },
             tickLabels: {
