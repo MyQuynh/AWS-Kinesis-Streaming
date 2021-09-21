@@ -3,7 +3,7 @@ import { Flex, Box, Text } from '@chakra-ui/react';
 import { HashtaggerResponseData } from './hashtaggerSlice';
 
 interface ResultSectionProps {
-  hashtags: HashtaggerResponseData;
+  hashtags: string[];
 }
 
 // eslint-disable-next-line arrow-body-style

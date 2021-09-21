@@ -21,20 +21,30 @@ const WiseInsightsPage: React.FC = () => {
   const wiseInsights = useAppSelector((state) => state.wiseInsights);
   const dispatch = useAppDispatch();
 
+  /**
+   * @param {number} top - Get list of hashtags sorted in descending order with limit
+   */
   const filterTopHashtags = useCallback(
     // eslint-disable-next-line consistent-return
     (top: number) => {
-      if (wiseInsights.data.length > 0) {
-        const sortedData = wiseInsights.data
+      if (wiseInsights.data.hashtags.length > 0) {
+        console.log(wiseInsights.data.hashtags);
+        const sortedData = wiseInsights.data.hashtags
           .slice()
           .sort((a, b) => b.value - a.value);
         console.log(sortedData);
         return sortedData.slice(0, top);
       }
-      return wiseInsights.data;
+      return wiseInsights.data.hashtags;
     },
-    [wiseInsights.data]
+    [wiseInsights.data.hashtags]
   );
+
+  const normalizeRangeValue = (
+    value: number,
+    min: number = -1,
+    max: number = 1
+  ) => (value - min) / (max - min);
 
   useEffect(() => {
     dispatch(fetchTwitterHashtags(null));
@@ -75,7 +85,7 @@ const WiseInsightsPage: React.FC = () => {
                   {
                     idle: <></>,
                     pending: <LoadingThreeDot />,
-                    fulfilled: <WordCloud data={wiseInsights.data} />,
+                    fulfilled: <WordCloud data={wiseInsights.data.hashtags} />,
                     rejected: (
                       <>
                         <p>Error!!!!!!</p>
@@ -147,7 +157,9 @@ const WiseInsightsPage: React.FC = () => {
               m={0}
               h="100%"
             >
-              <SentimentGauge percent={0.87} />
+              <SentimentGauge
+                percent={normalizeRangeValue(wiseInsights.data.score)}
+              />
             </Flex>
           </GridItem>
         </Grid>

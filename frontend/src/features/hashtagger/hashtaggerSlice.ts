@@ -21,14 +21,10 @@ interface UploadImageResponse {
 }
 
 /* Hashtagger responses and data */
-export interface HashtaggerResponseData extends Array<string> {}
-
-export interface HashtaggerCaptionResponseData {
+export interface HashtaggerResponseData {
   hashtags: string[];
 }
 
-export interface HashtaggerURLResponseData
-  extends HashtaggerCaptionResponseData {}
 /* Type of initial state for Hashtagger features */
 interface HashtaggerState {
   status: ThunkLoadingState;
@@ -97,7 +93,7 @@ export const fetchImageHashtags = createAsyncThunk<
  * @param {GetThunkAPI<{rejectedValue: KnownThunkError}>} thunkApi - Thunk's API used for returning rejected value on error
  */
 export const fetchCaptionHashtags = createAsyncThunk<
-  HashtaggerCaptionResponseData,
+  HashtaggerResponseData,
   string,
   {
     rejectValue: KnownThunkError;
@@ -116,7 +112,8 @@ export const fetchCaptionHashtags = createAsyncThunk<
       return thunkApi.rejectWithValue(error.response?.data as KnownThunkError);
     }
   }
-  return response?.data as HashtaggerCaptionResponseData;
+  console.log(response?.data);
+  return response?.data as HashtaggerResponseData;
 });
 
 /**
@@ -126,7 +123,7 @@ export const fetchCaptionHashtags = createAsyncThunk<
  * @param {GetThunkAPI<{rejectedValue: KnownThunkError}>} thunkApi - Thunk's API used for returning rejected value on error
  */
 export const fetchURLHashtags = createAsyncThunk<
-  HashtaggerURLResponseData,
+  HashtaggerResponseData,
   string,
   {
     rejectValue: KnownThunkError;
@@ -145,7 +142,7 @@ export const fetchURLHashtags = createAsyncThunk<
       return thunkApi.rejectWithValue(error.response?.data as KnownThunkError);
     }
   }
-  return response?.data as HashtaggerURLResponseData;
+  return response?.data as HashtaggerResponseData;
 });
 
 const hashtaggerSlice = createSlice({
@@ -160,7 +157,7 @@ const hashtaggerSlice = createSlice({
       })
       .addCase(fetchImageHashtags.fulfilled, (state, action) => {
         state.status = THUNK_ACTION_FULFILLED;
-        state.data = action.payload;
+        state.data = action.payload.hashtags;
       })
       .addCase(fetchImageHashtags.rejected, (state, action) => {
         state.status = THUNK_ACTION_REJECTED;

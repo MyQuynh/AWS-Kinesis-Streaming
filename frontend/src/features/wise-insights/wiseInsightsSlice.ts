@@ -15,20 +15,30 @@ export interface WiseInsightsData {
   value: number;
 }
 
-interface WiseInsightsResponseData extends Array<WiseInsightsData> {}
+interface WiseInsightsResponseData {
+  hashtags: WiseInsightsData[];
+  score: number;
+}
 
 interface WiseInsightsState {
   status: ThunkLoadingState;
-  data: WiseInsightsData[];
+  data: WiseInsightsResponseData;
   error: null | object | string;
 }
 
 const initialState: WiseInsightsState = {
   status: THUNK_ACTION_INITIAL,
-  data: [],
+  data: {
+    hashtags: [],
+    score: 0.0,
+  },
   error: null,
 };
 
+/**
+ * Thunk Action used to fetch twitter hashtags including their sentiment values
+ *
+ */
 export const fetchTwitterHashtags = createAsyncThunk<
   WiseInsightsResponseData,
   unknown,
@@ -38,13 +48,14 @@ export const fetchTwitterHashtags = createAsyncThunk<
 >('wiseInsights/fetchTwitterHashtags', async (_, thunkApi) => {
   let response;
   try {
-    response = await axios.get(`${API_GATEWAY_URL}/worldcloud`);
+    response = await axios.get(`${API_GATEWAY_URL}/sentiment`);
   } catch (error: unknown | Error | AxiosError) {
     console.log(error); // LOG Thunk ERROR
     if (axios.isAxiosError(error)) {
       return thunkApi.rejectWithValue(error.response?.data as KnownThunkError);
     }
   }
+  console.log('Length!!!');
   return response?.data as WiseInsightsResponseData;
 });
 
