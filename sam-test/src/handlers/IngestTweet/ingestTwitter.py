@@ -6,7 +6,9 @@ import time
 from urllib3.exceptions import ProtocolError
 #!/usr/bin/env python
 import nltk
-nltk.download('all')
+nltk.data.path.append("/tmp")
+nltk.download("stopwords", download_dir = "/tmp")
+nltk.download('wordnet', download_dir = "/tmp")
 from nltk.corpus import stopwords 
 from nltk.stem.wordnet import WordNetLemmatizer
 import gensim

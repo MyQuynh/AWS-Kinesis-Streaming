@@ -1,3 +1,7 @@
 requests
 pillow
 numpy
+tensorflow
+scipy
+pandas
+

@@ -3,7 +3,9 @@ import json
 from urllib3.exceptions import ProtocolError
 #!/usr/bin/env python
 import nltk
-nltk.download('all')
+nltk.data.path.append("/tmp")
+nltk.download("stopwords", download_dir = "/tmp")
+nltk.download('wordnet', download_dir = "/tmp")
 from nltk.corpus import stopwords 
 from nltk.stem.wordnet import WordNetLemmatizer
 import gensim
@@ -16,7 +18,7 @@ import re
 def extractHashtag(text):
 
     stop = set(stopwords.words("english"))
-    exclude = set(string.punctuation) 
+    exclude = set(string.punctuation)
     lemma = WordNetLemmatizer()
     
     doc_complete = text.split('\n')
@@ -46,18 +48,29 @@ def extractHashtag(text):
     return hashtags
 
 def handler(event, context):
-    tweet = event['body']
+
+    tweet = event['text']
+    
 
     if (tweet == None):
         return {
+        "headers": { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        },
         "statusCode": 200,
         "body": json.dumps({
-            "message" : "ERROR! Cannot generate null tweet, please try again",
+            "message" : "ERROR! Cannot generate text, please try again",
         }),
     }
 
     if (len(extractHashtag(tweet)) <= 0):
         return {
+        "headers": { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+           'Access-Control-Allow-Methods': '*'
+        },
         "statusCode": 200,
         "body": json.dumps({
             "message" : "Cannot generate any hashtags, please try again",
@@ -65,6 +78,10 @@ def handler(event, context):
     }
 
     return {
+        "headers": { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        },
         "statusCode": 200,
         "body": {
             "hashtags":json.dumps(extractHashtag(tweet))

@@ -8,8 +8,8 @@ Description: >
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    MemorySize: 128
-    Timeout: 900
+    MemorySize: 10240
+    Timeout: 180
 
 Parameters:
   FirehoseS3Prefix:
@@ -109,39 +109,34 @@ Resources:
   #         Properties:
   #           Schedule: rate(30 minutes)
   
-  IngestDataFunction2:
-    Type: AWS::Serverless::Function
-    Properties:
-      PackageType: Image
-      ImageConfig:
-        Command: ["ingest3.handler"]
-      MemorySize: 1536
-      Timeout: 500
-      Policies:
-        - FirehoseCrudPolicy:
-            DeliveryStreamName: !Ref DeliveryStream2
-      Events:
-        CheckWebsiteScheduledEvent:
-          Type: Schedule
-          Properties:
-            Schedule: rate(30 minutes)
-    Metadata:
-      DockerTag: python3.8-v3
-      DockerContext: ./src/handlers/IngestImageSpecificData
-      Dockerfile: Dockerfile
+  # IngestDataFunction2:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     PackageType: Image
+  #     ImageConfig:
+  #       Command: ["ingest3.handler"]
+  #     MemorySize: 1536
+  #     Timeout: 500
+  #     Policies:
+  #       - FirehoseCrudPolicy:
+  #           DeliveryStreamName: !Ref DeliveryStream2
+  #     Events:
+  #       CheckWebsiteScheduledEvent:
+  #         Type: Schedule
+  #         Properties:
+  #           Schedule: rate(30 minutes)
+  #   Metadata:
+  #     DockerTag: python3.8-v3
+  #     DockerContext: ./src/handlers/IngestImageSpecificData
+  #     Dockerfile: Dockerfile
   
   GetPredictTextFunction:
     Type: AWS::Serverless::Function
     Properties:
       PackageType: Image
+      FunctionName: "GetPredictTextFunction"
       ImageConfig:
         Command: ["predictText.handler"]
-      Events:
-        GetPredictTextAPI:
-          Type: Api
-          Properties:
-            Path: /predictText
-            Method: post
     Metadata:
       DockerTag: python3.8-v4
       DockerContext: ./src/handlers/PredictText
@@ -151,14 +146,9 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       PackageType: Image
+      FunctionName: "GetPredictTextUrlFunction"
       ImageConfig:
         Command: ["predictTextUrl.handler"]
-      Events:
-        GetPredictTextAPI:
-          Type: Api
-          Properties:
-            Path: /predictTextUrl
-            Method: post
     Metadata:
       DockerTag: python3.8-v5
       DockerContext: ./src/handlers/PredictTextUrl
@@ -168,41 +158,116 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       PackageType: Image
+      FunctionName: "GetPredictImageFunction"
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref S3Records
       ImageConfig:
         Command: ["predictImage.handler"]
-      Events:
-        GetPredictImageAPI:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-          Properties:
-            Path: /predictImage
-            Method: post
     Metadata:
       DockerTag: python3.8-v6
       DockerContext: ./src/handlers/PredictImage
       Dockerfile: Dockerfile
 
 
-  # IngestTwitterDataFunction:
-  #   Type: AWS::Serverless::Function
-  #   Metadata:
-  #     BuildMethod: makefile
-  #   Properties:
-  #     # Layers:
-  #     #   - !Ref RuntimeDependenciesLayer
-  #     #   - arn:aws:lambda:us-east-2:770693421928:layer:Klayers-python38-nltk:46
-  #     #   - !Ref GensimLayer
-  #     #   - arn:aws:lambda:us-east-2:770693421928:layer:Klayers-python38-tweepy:1
-  #     #   - arn:aws:lambda:us-east-2:770693421928:layer:Klayers-python38-numpy:20
-  #     #   - arn:aws:lambda:us-east-2:770693421928:layer:Klayers-python38-scipy:1
-  #     Handler: ingestTwitter.lambda_handler
-  #     Policies:
-  #       - FirehoseCrudPolicy:
-  #           DeliveryStreamName: !Ref DeliveryStreamTwitter
-  #     Events:
-  #       CheckWebsiteScheduledEvent:
-  #         Type: Schedule
-  #         Properties:
-  #           Schedule: rate(30 minutes)
+  InvokeGetTextPredictFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      Handler: getPredictText.lambda_handler
+      Layers:
+        - !Ref RuntimeDependenciesLayer
+      Policies: 
+        - LambdaInvokePolicy:
+            FunctionName:
+              !Ref GetPredictTextFunction
+      Runtime: python3.8
+      Events:
+        GetPredictTextAPI:
+          Type: Api
+          Properties:
+            Path: /predictText
+            Method: post
+  
+  InvokeGetPredictImageFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      Handler: getPredictImage.lambda_handler
+      Layers:
+        - !Ref RuntimeDependenciesLayer
+      Policies: 
+        - LambdaInvokePolicy:
+            FunctionName:
+              !Ref GetPredictImageFunction
+      Runtime: python3.8
+      Events:
+        GetPredictImageAPI:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /predictImage
+            Method: post
+  
+  InvokeGetTextPredict2Function:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      Handler: getPredictTextUrl.lambda_handler
+      Layers:
+        - !Ref RuntimeDependenciesLayer
+      Policies: 
+        - LambdaInvokePolicy:
+            FunctionName:
+              !Ref GetPredictTextUrlFunction
+      Runtime: python3.8
+      Events:
+        GetPredictTextUrlAPI:
+          Type: Api
+          Properties:
+            Path: /predictTextUrl
+            Method: post
+  
+  WorldCloudFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      Handler: worldcloud.handler
+      Layers:
+        - !Ref RuntimeDependenciesLayer
+      Runtime: python3.8
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref S3Records
+      Events:
+        WorldCloudAPI:
+          Type: Api
+          Properties:
+            Path: /worldcloud
+            Method: get
+  
+  SentimentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      ImageConfig:
+        Command: ["sentiment.handler"]
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref S3Records
+      Events:
+        SentimentAPI:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /sentiment
+            Method: get
+    Metadata:
+      DockerTag: python3.8-v7
+      DockerContext: ./src/handlers/Sentiment
+      Dockerfile: Dockerfile
 
   DeliveryStream:
     Type: AWS::KinesisFirehose::DeliveryStream
@@ -345,17 +410,17 @@ Resources:
   #   Metadata:
   #     BuildMethod: python3.8
 
-  GensimLayer:
-    Type: AWS::Serverless::LayerVersion
-    Properties:
-      LayerName: Gensim
-      Description: Gensim Layer
-      ContentUri: layers/gensim/
-      CompatibleRuntimes:
-        - python3.8
-      RetentionPolicy: Retain
-    Metadata:
-      BuildMethod: makefile
+  # GensimLayer:
+  #   Type: AWS::Serverless::LayerVersion
+  #   Properties:
+  #     LayerName: Gensim
+  #     Description: Gensim Layer
+  #     ContentUri: layers/gensim/
+  #     CompatibleRuntimes:
+  #       - python3.8
+  #     RetentionPolicy: Retain
+  #   Metadata:
+  #     BuildMethod: makefile
   
   # ScipyLayer:
   #   Type: AWS::Serverless::LayerVersion

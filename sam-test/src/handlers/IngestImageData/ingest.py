@@ -23,6 +23,9 @@ ACCESS_KEY_RITEKIT = "7eddd2a9805f6196f964d51847b4ba16786346a4a807"
 USERNAME = "rmit_1234"
 PASSWORD = "rmit1234"
 
+# USERNAME = "rmit_2345"
+# PASSWORD = "rmit2345"
+
 # The kinesis stream I defined in asw console
 stream_name = 'DeliveryStream'
 
@@ -121,6 +124,8 @@ def put_to_stream(image_url, hashtag, caption):
             'hashtag': json.dumps(hashtag),
             'caption': str(caption),
         }
+    
+    print(payload)
 
     response = k_client.put_record(
             DeliveryStreamName=stream_name,
