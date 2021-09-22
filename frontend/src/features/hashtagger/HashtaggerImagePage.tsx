@@ -51,7 +51,7 @@ const HashtaggerImagePage: React.FC = () => {
   // Submit handler for image
   const submitImageHandler: SubmitHandler<InputFormImageProps> = (data) => {
     // setIsSubmit(true);
-    console.log('Image submitted!');
+    // console.log('Image submitted!');
     const file = data.file[0]; // Retrieve first selected file
     dispatch(fetchImageHashtags(file));
   };

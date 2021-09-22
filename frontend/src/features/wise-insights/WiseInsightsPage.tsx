@@ -28,11 +28,9 @@ const WiseInsightsPage: React.FC = () => {
     // eslint-disable-next-line consistent-return
     (top: number) => {
       if (wiseInsights.data.hashtags.length > 0) {
-        console.log(wiseInsights.data.hashtags);
         const sortedData = wiseInsights.data.hashtags
           .slice()
           .sort((a, b) => b.value - a.value);
-        console.log(sortedData);
         return sortedData.slice(0, top);
       }
       return wiseInsights.data.hashtags;

@@ -52,9 +52,15 @@ const InputImage: React.FC<InputImageProps> = ({ formProps, accept }) => {
               inputRef.current = e;
             }}
             onChange={(e) => {
-              field.onChange(e.target.files);
-              if (validateImageExtensions(e.target.files![0])) {
-                handleThumbnail(e.target.files![0]);
+              // Check if list of files is defined
+              if (
+                e.target.files !== null ||
+                typeof e.target.files !== 'undefined'
+              ) {
+                field.onChange(e.target.files);
+                if (validateImageExtensions(e.target.files![0])) {
+                  handleThumbnail(e.target.files![0]);
+                }
               }
             }}
           />

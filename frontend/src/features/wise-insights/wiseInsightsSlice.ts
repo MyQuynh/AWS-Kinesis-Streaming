@@ -55,7 +55,6 @@ export const fetchTwitterHashtags = createAsyncThunk<
       return thunkApi.rejectWithValue(error.response?.data as KnownThunkError);
     }
   }
-  console.log('Length!!!');
   return response?.data as WiseInsightsResponseData;
 });
 

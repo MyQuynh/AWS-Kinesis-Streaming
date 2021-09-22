@@ -41,7 +41,7 @@ const HashtaggerCaptionPage: React.FC = () => {
 
   const submitCaptionHandler: SubmitHandler<InputFormCaptionProps> = (data) => {
     // Log data for TEST only!
-    console.log(data);
+    // console.log(data);
     dispatch(fetchCaptionHashtags(data.caption));
   };
 

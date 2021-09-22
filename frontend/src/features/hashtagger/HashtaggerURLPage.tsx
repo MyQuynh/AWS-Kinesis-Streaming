@@ -50,7 +50,7 @@ const HashtaggerURLPage: React.FC = () => {
   const dispatch = useAppDispatch();
 
   const submitURLHandler: SubmitHandler<InputFormURLProps> = (data) => {
-    console.log(data);
+    // console.log(data);
     dispatch(fetchURLHashtags(data.url));
   };
   return (

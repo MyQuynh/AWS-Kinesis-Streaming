@@ -3,6 +3,8 @@ import { IconType } from 'react-icons';
 import { Flex, Icon, Text } from '@chakra-ui/react';
 import { NavLink } from 'react-router-dom';
 import './SideMenu.css';
+import { useAppDispatch, useAppSelector } from '../../hooks';
+import { clean } from './hashtaggerSlice';
 
 export interface MenuItem {
   icon: IconType;
@@ -16,6 +18,8 @@ interface SideMenuProps {
 
 // eslint-disable-next-line arrow-body-style
 const SideMenu: React.FC<SideMenuProps> = ({ items }) => {
+  const dispatch = useAppDispatch();
+
   return (
     <>
       <Flex flexDirection="column">
@@ -26,6 +30,9 @@ const SideMenu: React.FC<SideMenuProps> = ({ items }) => {
               className="side-menu-nav"
               to={`/hashtagger/${item.id}`}
               activeClassName="selected"
+              onClick={() => {
+                dispatch(clean()); // Prune hashtagger previous generated data
+              }}
             >
               <Flex
                 flexDirection="row"

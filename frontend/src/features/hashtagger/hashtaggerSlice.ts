@@ -72,7 +72,8 @@ export const fetchImageHashtags = createAsyncThunk<
 >('hashtagger/processImage', async (image: File, thunkApi) => {
   let response;
   try {
-    const key = uploadImage(image); // Upload image to S3
+    const key = await uploadImage(image); // Upload image to S3
+    // console.log('Key sent:', key);
     response = await axios.post(`${API_GATEWAY_URL}/predictImage`, {
       key,
     });
@@ -148,7 +149,12 @@ export const fetchURLHashtags = createAsyncThunk<
 const hashtaggerSlice = createSlice({
   name: 'hashtagger',
   initialState,
-  reducers: {},
+  reducers: {
+    clean: (state) => {
+      state.data = [];
+      state.status = 'idle';
+    },
+  },
   extraReducers: (builder) => {
     builder
       /* Image section */
@@ -201,5 +207,7 @@ const hashtaggerSlice = createSlice({
       });
   },
 });
+
+export const { clean } = hashtaggerSlice.actions;
 
 export default hashtaggerSlice.reducer;
