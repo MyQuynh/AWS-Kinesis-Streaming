@@ -1,0 +1,4 @@
+gensim
+nltk
+bs4
+requests

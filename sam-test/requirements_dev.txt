@@ -1,0 +1,7 @@
+requests
+instagrapi
+tweepy
+Pillow==8.3.2
+pycryptodome==3.10.1
+regex==2020.11.13
+tensorflow

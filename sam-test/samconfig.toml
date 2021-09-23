@@ -8,4 +8,5 @@ s3_prefix = "kinesis"
 region = "us-east-2"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "FirehoseS3Prefix=\"firehose/\" FirehoseCompressionFormat=\"GZIP\" FirehoseBufferingInterval=\"60\" FirehoseBufferingSize=\"10\""
+parameter_overrides = "FirehoseS3Prefix=\"firehose/\" FirehoseS3PrefixTwitter=\"twitter/\" FirehoseS3Prefix2=\"firehose2/\" FirehoseCompressionFormat=\"GZIP\" FirehoseBufferingInterval=\"60\" FirehoseBufferingSize=\"10\" AthenaDatabaseName=\"serverless_data_pipeline\" AthenaTableName=\"records\""
+image_repositories = ["IngestDataFunction=023844336848.dkr.ecr.us-east-2.amazonaws.com/en", "IngestTwitterFunction=023844336848.dkr.ecr.us-east-2.amazonaws.com/en", "GetPredictTextFunction=023844336848.dkr.ecr.us-east-2.amazonaws.com/en", "GetPredictTextUrlFunction=023844336848.dkr.ecr.us-east-2.amazonaws.com/en", "GetPredictImageFunction=023844336848.dkr.ecr.us-east-2.amazonaws.com/en", "SentimentFunction=023844336848.dkr.ecr.us-east-2.amazonaws.com/en"]

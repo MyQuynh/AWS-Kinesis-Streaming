@@ -4,10 +4,10 @@ endif
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
-.PHONY: build-RuntimeDependenciesLayer build-lambda-common
+# .PHONY: build-RuntimeDependenciesLayer build-lambda-common
 # .PHONY: build-TfRuntimeLayer build-lambda-common
-# .PHONY: build-RegexLayer build-lambda-common
-.PHONY: build-CovidFunction build-IngestDataFunction build-IngestDataFunction2 build-GetPredictTextFunction build-InvokeGetTextPredictFunction build-InvokeGetTextPredict2Function build-WorldCloudFunction build-InvokeGetPredictImageFunction build-InvokeGetPredict2Function
+.PHONY: build-GensimLayer
+# .PHONY: build-CovidFunction build-IngestDataFunction build-IngestTwitterDataFunction build-IngestDataFunction2
 
 HANDLER:= $(src/**/*.py)
 
@@ -79,54 +79,37 @@ upload pypi:
 	@ python setup.py sdist upload
 
 
-build-RuntimeDependenciesLayer:
-		mkdir -p "$(ARTIFACTS_DIR)/python"
-		cp *.py "$(ARTIFACTS_DIR)/python"
-		python -m pip install -r requirements_prod.txt -t "$(ARTIFACTS_DIR)/python"
-
-# build-RegexLayer:
+# build-RuntimeDependenciesLayer:
 # 		mkdir -p "$(ARTIFACTS_DIR)/python"
 # 		cp *.py "$(ARTIFACTS_DIR)/python"
-# 		python -m pip install -r requirements.txt -t "$(ARTIFACTS_DIR)/python"
+# 		python -m pip install -r requirements_prod.txt -t "$(ARTIFACTS_DIR)/python"
+
+build-GensimLayer:
+		mkdir -p "$(ARTIFACTS_DIR)/python"
+		python -m pip install -r requirements.txt -t "$(ARTIFACTS_DIR)/python"
 
 # build-TfRuntimeLayer:
 # 		mkdir -p "$(ARTIFACTS_DIR)/python"
 # 		cp *.py "$(ARTIFACTS_DIR)/python"
 # 		python -m pip install -r requirements.txt -t "$(ARTIFACTS_DIR)/python"
 
-build-lambda-common-function:
-		cp -r $(HANDLER) "$(ARTIFACTS_DIR)/"
+# build-lambda-common-function:
+# 		cp -r $(HANDLER) "$(ARTIFACTS_DIR)/"
 
 build-lambda-common:
 		cp -r src "$(ARTIFACTS_DIR)/"
 
-build-HelloWorldFunction:
-		$(MAKE) HANDLER=src/handlers/app.py build-lambda-common-function
+# build-HelloWorldFunction:
+# 		$(MAKE) HANDLER=src/handlers/app.py build-lambda-common-function
 
-build-IngestDataFunction:
-		$(MAKE) HANDLER=src/handlers/ingest.py build-lambda-common-function
+# build-IngestDataFunction:
+# 		$(MAKE) HANDLER=src/handlers/ingest.py build-lambda-common-function
 
-build-IngestDataFunction2:
-		$(MAKE) HANDLER=src/handlers/ingest3.py build-lambda-common-function
+# build-IngestDataFunction2:
+# 		$(MAKE) HANDLER=src/handlers/ingest3.py build-lambda-common-function
 
-build-GetPredictTextFunction:
-		$(MAKE) HANDLER=src/handlers/predictText.py build-lambda-common-function
-
-build-InvokeGetTextPredictFunction:
-		$(MAKE) HANDLER=src/handlers/getPredictText.py build-lambda-common-function
-
-build-InvokeGetTextPredict2Function:
-		$(MAKE) HANDLER=src/handlers/getPredictTextUrl.py build-lambda-common-function
-
-build-InvokeGetPredictImageFunction:
-		$(MAKE) HANDLER=src/handlers/getPredictImage.py build-lambda-common-function
-
-build-WorldCloudFunction:
-		$(MAKE) HANDLER=src/handlers/worldcloud.py build-lambda-common-function
-
-
-build-InvokeGetPredict2Function:
-		$(MAKE) HANDLER=src/handlers/invokeFunction1.py build-lambda-common-function
+# build-IngestTwitterDataFunction:
+# 		$(MAKE) HANDLER=src/handlers/ingestTwitter.py build-lambda-common-function
 
 # build-GetPredictImageFunction:
 # 		$(MAKE) HANDLER=src/handlers/predictImage.py build-lambda-common-function

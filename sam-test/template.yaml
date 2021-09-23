@@ -7,12 +7,14 @@ Description: >
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
+  Api:
+    EndpointConfiguration: REGIONAL
+    # Your CORS hosts need to be in this format - note the two layers of quotes.
+    Cors: "'*'"
+
   Function:
-    Layers:
-      - !Ref RuntimeDependenciesLayer
-    Runtime: python3.7
-    MemorySize: 128
-    Timeout: 100
+    MemorySize: 10240
+    Timeout: 180
 
 Parameters:
   FirehoseS3Prefix:
@@ -23,6 +25,10 @@ Parameters:
     Type: String
     Default: twitter/
     Description: "The S3 Key prefix for Kinesis Firehose Twitter."
+  FirehoseS3Prefix2:
+    Type: String
+    Default: firehose2/
+    Description: "The S3 Key prefix for Kinesis Firehose specific"
   FirehoseCompressionFormat:
     Type: String
     Default: GZIP
@@ -51,35 +57,312 @@ Parameters:
 
 Resources:
 
+  # YourFunction:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     Handler: callbackcode.handler
+  #     Runtime: python3.7
+  #     CodeUri: ./yourfunction/
+  #     Events:
+  #       Callback:
+  #         Type: Api
+  #         Properties:
+  #           Path: /yourcallback
+  #           Method: get
+  #           RestApiId:
+  #             Ref: YourAPIGateway
+
+
+  # AppApi:
+  #   Type: AWS::Serverless::Api
+  #   Properties:
+  #     StageName: Dev
+  #     # enable CORS; to make more specific, change the origin wildcard
+  #     # to a particular domain name, e.g. "'www.example.com'"
+  #     Cors:
+  #       AllowMethods: "'OPTIONS,GET,POST,PUT,DELETE'"
+  #       AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+  #       AllowOrigin: "*"
+
   IngestDataFunction:
-    Type: AWS::Serverless::Function
-    Metadata:
-      BuildMethod: makefile
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      Handler: ingest.lambda_handler
+      PackageType: Image
+      ImageConfig:
+        Command: ["ingest.handler"]
+      MemorySize: 1536
+      Timeout: 900
       Policies:
         - FirehoseCrudPolicy:
             DeliveryStreamName: !Ref DeliveryStream
       Events:
-        CheckWebsiteScheduledEvent:
+        CheckWebsiteScheduledEvent1:
           Type: Schedule
           Properties:
             Schedule: rate(30 minutes)
-  
-  IngestTwitterDataFunction:
-    Type: AWS::Serverless::Function
     Metadata:
-      BuildMethod: makefile
+      DockerTag: python3.8-v1
+      DockerContext: ./src/handlers/IngestImageData
+      Dockerfile: Dockerfile
+  
+  IngestTwitterFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      Handler: ingestTwitter.lambda_handler
+      PackageType: Image
+      ImageConfig:
+        Command: ["ingestTwitter.handler"]
+      MemorySize: 1536
+      Timeout: 500
       Policies:
         - FirehoseCrudPolicy:
             DeliveryStreamName: !Ref DeliveryStreamTwitter
       Events:
-        CheckWebsiteScheduledEvent:
+        CheckWebsiteScheduledEvent1:
           Type: Schedule
           Properties:
             Schedule: rate(30 minutes)
+    Metadata:
+      DockerTag: python3.8-v2
+      DockerContext: ./src/handlers/IngestTweet
+      Dockerfile: Dockerfile
+
+  # IngestDataFunction:
+  #   Type: AWS::Serverless::Function
+  #   Metadata:
+  #     BuildMethod: makefile
+  #   Properties:
+  #     Handler: ingest.lambda_handler
+  #     Policies:
+  #       - FirehoseCrudPolicy:
+  #           DeliveryStreamName: !Ref DeliveryStream
+  #     Events:
+  #       CheckWebsiteScheduledEvent:
+  #         Type: Schedule
+  #         Properties:
+  #           Schedule: rate(30 minutes)
+  
+  # IngestDataFunction2:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     PackageType: Image
+  #     ImageConfig:
+  #       Command: ["ingest3.handler"]
+  #     MemorySize: 1536
+  #     Timeout: 500
+  #     Policies:
+  #       - FirehoseCrudPolicy:
+  #           DeliveryStreamName: !Ref DeliveryStream2
+  #     Events:
+  #       CheckWebsiteScheduledEvent:
+  #         Type: Schedule
+  #         Properties:
+  #           Schedule: rate(30 minutes)
+  #   Metadata:
+  #     DockerTag: python3.8-v3
+  #     DockerContext: ./src/handlers/IngestImageSpecificData
+  #     Dockerfile: Dockerfile
+  
+  GetPredictTextFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      FunctionName: "GetPredictTextFunction"
+      ImageConfig:
+        Command: ["predictText.handler"]
+      Events:
+        GetPredictText1API:
+          Type: Api
+          Properties:
+            Path: /text
+            Method: post
+    Metadata:
+      DockerTag: python3.8-v4
+      DockerContext: ./src/handlers/PredictText
+      Dockerfile: Dockerfile
+    
+  GetPredictTextUrlFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      FunctionName: "GetPredictTextUrlFunction"
+      ImageConfig:
+        Command: ["predictTextUrl.handler"]
+      Events:
+        GetPredictText1API:
+          Type: Api
+          Properties:
+            Path: /url
+            Method: post
+    Metadata:
+      DockerTag: python3.8-v5
+      DockerContext: ./src/handlers/PredictTextUrl
+      Dockerfile: Dockerfile
+  
+  GetPredictImageFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      FunctionName: "GetPredictImageFunction"
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref S3Records
+      ImageConfig:
+        Command: ["predictImage.handler"]
+      Events:
+        GetPredictText1API:
+          Type: Api
+          Properties:
+            Path: /image
+            Method: post
+    Metadata:
+      DockerTag: python3.8-v6
+      DockerContext: ./src/handlers/PredictImage
+      Dockerfile: Dockerfile
+
+
+  InvokeGetTextPredictFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      Handler: getPredictText.lambda_handler
+      Layers:
+        - !Ref RuntimeDependenciesLayer
+      Policies: 
+        - LambdaInvokePolicy:
+            FunctionName:
+              !Ref GetPredictTextFunction
+      Runtime: python3.8
+      Events:
+        GetPredictTextAPI:
+          Type: Api
+          Properties:
+            Path: /predictText
+            Method: post
+
+  # YourAPIGateway:
+  #   Type: AWS::Serverless::Api
+  #   DependsOn: InvokeGetTextPredictFunction
+    # Properties:
+    #   StageName: prod
+    #   DefinitionBody:
+    #     swagger: 2.0
+    #     info:
+    #       version: "1.0"
+    #       title: "A nice title"
+    #     basePath: /prod
+    #     schemes:
+    #     - "https"
+    #     paths:
+    #       /callback:
+    #         post:
+    #           responses: {}
+    #           x-amazon-apigateway-integration:
+    #             uri:
+    #               # You need to build up the ARN with this pattern - you can't just use a !Ref or !GetAtt AFAIK.
+    #               Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetPredictTextFunction.Arn}/invocations
+    #             passthroughBehavior: "when_no_match"
+    #             httpMethod: "POST"
+    #             type: "aws_proxy"
+  
+  InvokeGetPredictImageFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      Handler: getPredictImage.lambda_handler
+      Layers:
+        - !Ref RuntimeDependenciesLayer
+      Policies: 
+        - LambdaInvokePolicy:
+            FunctionName:
+              !Ref GetPredictImageFunction
+      Runtime: python3.8
+      Events:
+        GetPredictImageAPI:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /predictImage
+            Method: post
+  
+  InvokeGetTextPredict2Function:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      Handler: getPredictTextUrl.lambda_handler
+      Layers:
+        - !Ref RuntimeDependenciesLayer
+      Policies: 
+        - LambdaInvokePolicy:
+            FunctionName:
+              !Ref GetPredictTextUrlFunction
+      Runtime: python3.8
+      Events:
+        GetPredictTextUrlAPI:
+          Type: Api
+          Properties:
+            Path: /predictTextUrl
+            Method: post
+  
+  # InvokeGetPredict2Function:
+  #   Type: AWS::Serverless::Function
+  #   Metadata:
+  #     BuildMethod: makefile
+  #   Properties:
+  #     Handler: invokeFunction1.lambda_handler
+  #     Layers:
+  #       - !Ref RuntimeDependenciesLayer
+  #     Policies: 
+  #       - LambdaInvokePolicy:
+  #           FunctionName:
+  #             !Ref InvokeGetPredictImageFunction
+  #     Runtime: python3.8
+  #     Events:
+  #       GetPredict2API:
+  #         Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+  #         Properties:
+  #           Path: /predictText
+  #           Method: post
+  
+  WorldCloudFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      Handler: worldcloud.handler
+      Layers:
+        - !Ref RuntimeDependenciesLayer
+      Runtime: python3.8
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref S3Records
+      Events:
+        WorldCloudAPI:
+          Type: Api
+          Properties:
+            Path: /worldcloud
+            Method: get
+  
+  SentimentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      ImageConfig:
+        Command: ["sentiment.handler"]
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref S3Records
+      Events:
+        SentimentAPI:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /sentiment
+            Method: get
+    Metadata:
+      DockerTag: python3.8-v7
+      DockerContext: ./src/handlers/Sentiment
+      Dockerfile: Dockerfile
 
   DeliveryStream:
     Type: AWS::KinesisFirehose::DeliveryStream
@@ -110,6 +393,25 @@ Resources:
       ExtendedS3DestinationConfiguration:
         Prefix: !Ref FirehoseS3PrefixTwitter
         BucketARN: !Join 
+          - ''
+          - - 'arn:aws:s3:::'
+            - !Ref S3Records
+        BufferingHints:
+          IntervalInSeconds: !Ref FirehoseBufferingInterval
+          SizeInMBs: !Ref FirehoseBufferingSize
+        CompressionFormat: !Ref FirehoseCompressionFormat
+        RoleARN: !GetAtt DeliveryStreamRole.Arn
+  
+  DeliveryStream2:
+    Type: AWS::KinesisFirehose::DeliveryStream
+    DependsOn:
+      - DeliveryStreamPolicy
+    Properties:
+      DeliveryStreamName: "DeliveryStream2"
+      DeliveryStreamType: DirectPut
+      ExtendedS3DestinationConfiguration:
+        Prefix: !Ref FirehoseS3Prefix2
+        BucketARN: !Join
           - ''
           - - 'arn:aws:s3:::'
             - !Ref S3Records
@@ -161,70 +463,23 @@ Resources:
                 - - 'arn:aws:s3:::'
                   - !Ref S3Records
                   - '*'
-  
-  CFNRoleFlights:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          -
-            Effect: "Allow"
-            Principal:
-              Service:
-                - "glue.amazonaws.com"
-            Action:
-              - "sts:AssumeRole"
-      Path: "/"
-      Policies:
-        -
-          PolicyName: "root"
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              -
-                Effect: "Allow"
-                Action: "*"
-                Resource: "*"
-
-  MyCrawler2:
-    Type: AWS::Glue::Crawler
-    Properties:
-      Name: "testcrawler1"
-      Role: !GetAtt CFNRoleFlights.Arn
-      DatabaseName: !Ref AthenaDatabaseName
-      Targets:
-        S3Targets:
-          - Path: !Ref S3Records
-      SchemaChangePolicy:
-        UpdateBehavior: "UPDATE_IN_DATABASE"
-        DeleteBehavior: "LOG"
-      Schedule:
-        ScheduleExpression: "cron(0/10 * ? * MON-FRI *)"
-  
-  AthenaCreateDatabaseQuery:
-    Type: AWS::Athena::NamedQuery
-    Properties:
-      Description: Run this query to initialize the Athena database
-      QueryString: !Sub "CREATE DATABASE IF NOT EXISTS `${AthenaDatabaseName}`;"
-      Database: !Ref AthenaDatabaseName
-
-  AthenaCreateTableQuery:
-    Type: AWS::Athena::NamedQuery
-    DependsOn:
-      - S3Records
-    Properties:
-      Description: Run this query to initialize the Athena table
-      QueryString: !Sub >
-        CREATE EXTERNAL TABLE IF NOT EXISTS `${AthenaDatabaseName}`.`${AthenaTableName}` (
-          `url` string,
-          `description` string,
-          `location` string
-        )
-      Database: !Ref AthenaDatabaseName
 
   S3Records:
     Type: AWS::S3::Bucket
+  
+  MyRepository: 
+    Type: AWS::ECR::Repository
+    Properties: 
+      RepositoryName: "test-repository-1"
+      ImageScanningConfiguration: 
+        ScanOnPush: "true"
+  
+  MyRepository2: 
+    Type: AWS::ECR::Repository
+    Properties: 
+      RepositoryName: "test-repository-2"
+      ImageScanningConfiguration: 
+        ScanOnPush: "true"
 
   RuntimeDependenciesLayer:
     Type: AWS::Serverless::LayerVersion
@@ -235,8 +490,44 @@ Resources:
       Description: Python Runtime dependencies for Lambdas
       ContentUri: ./
       CompatibleRuntimes:
-        - python3.7
+        - python3.8
       RetentionPolicy: Retain
+
+  # TfRuntimeLayer:
+  #   Type: AWS::Serverless::LayerVersion
+  #   Properties:
+  #     LayerName: TfRuntime
+  #     Description: TF Runtime Layer
+  #     ContentUri: layers/tensorflow/
+  #     CompatibleRuntimes:
+  #       - python3.8
+  #     RetentionPolicy: Retain
+  #   Metadata:
+  #     BuildMethod: python3.8
+
+  # GensimLayer:
+  #   Type: AWS::Serverless::LayerVersion
+  #   Properties:
+  #     LayerName: Gensim
+  #     Description: Gensim Layer
+  #     ContentUri: layers/gensim/
+  #     CompatibleRuntimes:
+  #       - python3.8
+  #     RetentionPolicy: Retain
+  #   Metadata:
+  #     BuildMethod: makefile
+  
+  # ScipyLayer:
+  #   Type: AWS::Serverless::LayerVersion
+  #   Properties:
+  #     LayerName: Scipy
+  #     Description: Scipy Layer
+  #     ContentUri: layers/scipy/
+  #     CompatibleRuntimes:
+  #       - python3.8
+  #     RetentionPolicy: Retain
+  #   Metadata:
+  #     BuildMethod: makefile
 
   # # DynamoTable:
   # #   Type: AWS::DynamoDB::Table
@@ -301,13 +592,15 @@ Resources:
       BuildMethod: makefile
     Properties:
       Handler: app.lambda_handler
-      Runtime: python3.7
+      Runtime: python3.8
       Events:
         HelloWorld:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
             Path: /hello
-            Method: get
+            Method: post
+            Path: /{proxy+}
+            Method: ANY
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
