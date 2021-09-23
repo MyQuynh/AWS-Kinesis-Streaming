@@ -14,15 +14,6 @@ import pandas as pd
 from scipy.spatial.distance import cosine
 
 
-# MODEL_FILE = 's3://bucket/model.tar.gz'
-# with gzip.open(MODEL_FILE, 'rb') as f:
-#     MODEL = pickle.load(f)
-
-# model_path = './model/'
-# loaded_model = tf.saved_model.load(model_path)
-# detector = loaded_model.signatures['default']
-
-
 s3 = boto3.resource('s3', region_name='us-east-2')
 client = boto3.client('s3', region_name='us-east-2')
 
@@ -93,23 +84,33 @@ neural_net = construct_neural_network()
 def get_hashtags(df_features, hashtags_df,images_features,hashtag_features,neural_net = neural_net, url = None,client = client ,bucket=None,key = None,number = 20):
     if url:
         deep_features = get_vector_url(url,neural_net)
-        print(type(deep_features[0]))
+#         print(type(deep_features[0]))
     else:
         image = fetch_image_from_s3_to_array(client,bucket,key)
         deep_features = get_vector_img(image,neural_net)
     df_rec = df_features.copy()
     chosen = find_neighbor_vectors(deep_features,df_rec)
-    list_features_combine = [images_features.loc[i,"features"] for i in chosen.index.tolist()]
+    def get_list(chosen_vectors,images_features):
+        list_return = []
+        for i in chosen_vectors.index.tolist():
+            try:
+                list_return.append(images_features.loc[i,"features"])
+            except:
+                pass
+        return list_return
+            
+    list_features_combine = get_list(chosen,images_features )
     average_features = np.asarray(list_features_combine).mean(axis = 0)
     hashtags = hashtag_features.copy()
     hashtags["dot_product"] = hashtags.features.apply(lambda x: np.asarray(x).dot(average_features))
     final_recs = hashtags.sort_values(by='dot_product', ascending=False).head(number)
     # Look up hashtags by their numeric IDs
     output = []
-    for hashtag_id in final_recs.index.values:
+    for hashtag_id in final_recs.id.values:
         output.append(hashtags_df.iloc[hashtag_id]['hashtag'])
 
     return output
+
 
 # extract features get the deep features from neural network to use later 
 def extract_features(image, neural_network):
@@ -180,7 +181,7 @@ def handler(event, context):
     hashtag_features = read_csv_file(bucketname,hashtag_features_file)
     hashtag_features["features"] = hashtag_features["features"].apply(lambda x: np.fromstring(x[1:-1],sep=", ") )
 
-    list_hastags = get_hashtags(df_features, hashtags_df, images_features, hashtag_features, neural_net = neural_net, bucket="kinesis1-s3records-1nxlxhk4k70zb", key="image/" + image)
+    list_hastags = get_hashtags(df_features, hashtags_df, images_features, hashtag_features, neural_net = neural_net, bucket="kinesis-s3records-16jckkpyv314r", key=image)
 
     # data = s3.get_object(Bucket='kinesis-s3records-lpe10xm71t8x', Key='huhu.png')
     # contents = data['Body'].read()
@@ -202,7 +203,7 @@ def handler(event, context):
     #         }
 
     return {
-        "headers": { 
+        "headers": {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*'
         },

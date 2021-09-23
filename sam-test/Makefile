@@ -7,7 +7,7 @@ SHELL := /bin/bash
 .PHONY: build-RuntimeDependenciesLayer build-lambda-common
 # .PHONY: build-TfRuntimeLayer build-lambda-common
 # .PHONY: build-RegexLayer build-lambda-common
-.PHONY: build-CovidFunction build-IngestDataFunction build-IngestDataFunction2 build-GetPredictTextFunction build-InvokeGetTextPredictFunction build-InvokeGetTextPredict2Function build-WorldCloudFunction build-InvokeGetPredictImageFunction
+.PHONY: build-CovidFunction build-IngestDataFunction build-IngestDataFunction2 build-GetPredictTextFunction build-InvokeGetTextPredictFunction build-InvokeGetTextPredict2Function build-WorldCloudFunction build-InvokeGetPredictImageFunction build-InvokeGetPredict2Function
 
 HANDLER:= $(src/**/*.py)
 
@@ -125,8 +125,8 @@ build-WorldCloudFunction:
 		$(MAKE) HANDLER=src/handlers/worldcloud.py build-lambda-common-function
 
 
-# build-IngestTwitterDataFunction:
-# 		$(MAKE) HANDLER=src/handlers/ingestTwitter.py build-lambda-common-function
+build-InvokeGetPredict2Function:
+		$(MAKE) HANDLER=src/handlers/invokeFunction1.py build-lambda-common-function
 
 # build-GetPredictImageFunction:
 # 		$(MAKE) HANDLER=src/handlers/predictImage.py build-lambda-common-function

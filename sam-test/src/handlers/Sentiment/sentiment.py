@@ -137,6 +137,9 @@ def getSentiment(dict):
 
 def handler(event, context):
 
+    print("Event")
+    print(event)
+
     list_hashtags = read_word_from_s3()
 
     count_frequency = createDictionary(list_hashtags)
