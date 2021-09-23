@@ -7,6 +7,11 @@ Description: >
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
+  Api:
+    EndpointConfiguration: REGIONAL
+    # Your CORS hosts need to be in this format - note the two layers of quotes.
+    Cors: "'*'"
+
   Function:
     MemorySize: 10240
     Timeout: 180
@@ -51,6 +56,33 @@ Parameters:
     Description: "The Athena table name"
 
 Resources:
+
+  # YourFunction:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     Handler: callbackcode.handler
+  #     Runtime: python3.7
+  #     CodeUri: ./yourfunction/
+  #     Events:
+  #       Callback:
+  #         Type: Api
+  #         Properties:
+  #           Path: /yourcallback
+  #           Method: get
+  #           RestApiId:
+  #             Ref: YourAPIGateway
+
+
+  # AppApi:
+  #   Type: AWS::Serverless::Api
+  #   Properties:
+  #     StageName: Dev
+  #     # enable CORS; to make more specific, change the origin wildcard
+  #     # to a particular domain name, e.g. "'www.example.com'"
+  #     Cors:
+  #       AllowMethods: "'OPTIONS,GET,POST,PUT,DELETE'"
+  #       AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+  #       AllowOrigin: "*"
 
   IngestDataFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -207,6 +239,31 @@ Resources:
           Properties:
             Path: /predictText
             Method: post
+
+  # YourAPIGateway:
+  #   Type: AWS::Serverless::Api
+  #   DependsOn: InvokeGetTextPredictFunction
+    # Properties:
+    #   StageName: prod
+    #   DefinitionBody:
+    #     swagger: 2.0
+    #     info:
+    #       version: "1.0"
+    #       title: "A nice title"
+    #     basePath: /prod
+    #     schemes:
+    #     - "https"
+    #     paths:
+    #       /callback:
+    #         post:
+    #           responses: {}
+    #           x-amazon-apigateway-integration:
+    #             uri:
+    #               # You need to build up the ARN with this pattern - you can't just use a !Ref or !GetAtt AFAIK.
+    #               Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetPredictTextFunction.Arn}/invocations
+    #             passthroughBehavior: "when_no_match"
+    #             httpMethod: "POST"
+    #             type: "aws_proxy"
   
   InvokeGetPredictImageFunction:
     Type: AWS::Serverless::Function
@@ -542,6 +599,8 @@ Resources:
           Properties:
             Path: /hello
             Method: post
+            Path: /{proxy+}
+            Method: ANY
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function

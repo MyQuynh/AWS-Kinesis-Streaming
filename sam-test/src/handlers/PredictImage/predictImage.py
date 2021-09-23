@@ -12,6 +12,7 @@ import tensorflow as tf
 from tensorflow.keras.applications import MobileNetV2
 import pandas as pd
 from scipy.spatial.distance import cosine
+import ast
 
 
 s3 = boto3.resource('s3', region_name='us-east-2')
@@ -106,7 +107,7 @@ def get_hashtags(df_features, hashtags_df,images_features,hashtag_features,neura
     final_recs = hashtags.sort_values(by='dot_product', ascending=False).head(number)
     # Look up hashtags by their numeric IDs
     output = []
-    for hashtag_id in final_recs.id.values:
+    for hashtag_id in final_recs.index.values:
         output.append(hashtags_df.iloc[hashtag_id]['hashtag'])
 
     return output
@@ -173,15 +174,15 @@ def handler(event, context):
     hashtags_file = "hashtags.csv"
     hashtags_df = read_csv_file(bucketname,hashtags_file)
 
-    images_features_file = "img_features.csv"
-    images_features = read_csv_file(bucketname,images_features_file)
-    images_features["features"] = images_features["features"].apply(lambda x: np.fromstring(x[1:-1],sep=", ") )
+    image_features = read_csv_file(bucketname,"img_features.csv")
+    image_features["features"] = image_features["features"].apply(lambda x: ast.literal_eval(x))
+    image_features = image_features.set_index("id")
 
-    hashtag_features_file = "hashtag_features.csv"
-    hashtag_features = read_csv_file(bucketname,hashtag_features_file)
-    hashtag_features["features"] = hashtag_features["features"].apply(lambda x: np.fromstring(x[1:-1],sep=", ") )
+    hashtag_features = read_csv_file(bucketname,"hashtag_features.csv")
+    hashtag_features["features"] = hashtag_features["features"].apply(lambda x: ast.literal_eval(x))
+    hashtag_features = hashtag_features.set_index("id")
 
-    list_hastags = get_hashtags(df_features, hashtags_df, images_features, hashtag_features, neural_net = neural_net, bucket="kinesis-s3records-16jckkpyv314r", key=image)
+    list_hastags = get_hashtags(df_features, hashtags_df, image_features, hashtag_features, neural_net = neural_net, bucket="kinesis-s3records-16jckkpyv314r", key=image)
 
     # data = s3.get_object(Bucket='kinesis-s3records-lpe10xm71t8x', Key='huhu.png')
     # contents = data['Body'].read()
