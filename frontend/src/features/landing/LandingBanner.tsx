@@ -8,6 +8,7 @@ import {
   Button,
   Text,
 } from '@chakra-ui/react';
+import { Link } from 'react-router-dom';
 import HashTagBanner from '../../assets/hashtag-section.jpg';
 
 // eslint-disable-next-line arrow-body-style
@@ -38,9 +39,11 @@ const LandingBanner: React.FC = () => {
               h={50}
               w={145}
             >
-              <Text fontWeight={800} fontSize={20}>
-                Get Started
-              </Text>
+              <Link to="/hashtagger/caption">
+                <Text fontWeight={800} fontSize={20}>
+                  Get Started
+                </Text>
+              </Link>
             </Button>
           </Box>
         </GridItem>

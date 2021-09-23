@@ -9,7 +9,12 @@ interface SentimentGaugeProps {
 const SentimentGauge: React.FC<SentimentGaugeProps> = ({ percent }) => {
   return (
     <>
-      <GaugeChart id="sentiment-gauge" percent={percent} textColor="#000000" />
+      <GaugeChart
+        id="sentiment-gauge"
+        percent={percent}
+        colors={['#ff0000', '#fff000', '#00FF00']}
+        textColor="#000000"
+      />
     </>
   );
 };

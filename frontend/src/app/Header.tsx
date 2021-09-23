@@ -3,6 +3,8 @@ import { Link, NavLink } from 'react-router-dom';
 import { Box, Stack, Heading, Flex, useDisclosure } from '@chakra-ui/react';
 import { HamburgerIcon } from '@chakra-ui/icons';
 import './Header.css';
+import { useAppDispatch } from '../hooks';
+import { clean } from '../features/hashtagger/hashtaggerSlice';
 
 interface HeaderProps {
   bgColor: string;
@@ -12,6 +14,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ bgColor, color }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const handleToggle = () => (isOpen ? onClose() : onOpen());
+  const dispatch = useAppDispatch();
 
   return (
     <>
@@ -52,6 +55,7 @@ const Header: React.FC<HeaderProps> = ({ bgColor, color }) => {
             style={{
               marginLeft: 20,
             }}
+            onClick={() => dispatch(clean())} // Prune previous hashtag generated data
           >
             Hashtagger
           </NavLink>
@@ -62,6 +66,7 @@ const Header: React.FC<HeaderProps> = ({ bgColor, color }) => {
             style={{
               marginLeft: 20,
             }}
+            onClick={() => dispatch(clean())} // Prune previous hashtag generated data
           >
             Wise Insights
           </NavLink>

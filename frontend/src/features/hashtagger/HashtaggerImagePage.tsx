@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -50,7 +50,6 @@ const HashtaggerImagePage: React.FC = () => {
   });
   // Submit handler for image
   const submitImageHandler: SubmitHandler<InputFormImageProps> = (data) => {
-    // setIsSubmit(true);
     // console.log('Image submitted!');
     const file = data.file[0]; // Retrieve first selected file
     dispatch(fetchImageHashtags(file));

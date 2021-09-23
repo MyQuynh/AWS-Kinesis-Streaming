@@ -1,7 +1,6 @@
-import React, { ChangeEvent, useState } from 'react';
+import React from 'react';
 import { Box, Input, FormControl } from '@chakra-ui/react';
 import { useController, UseControllerProps } from 'react-hook-form';
-import GenerateButton from './GenerateButton';
 
 export interface InputFormURLProps {
   url: string;

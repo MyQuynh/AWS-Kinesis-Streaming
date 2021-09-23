@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-  VictoryChart,
-  VictoryBar,
-  VictoryTheme,
-  VictoryAxis,
-  VictoryLabel,
-} from 'victory';
+import { VictoryChart, VictoryBar, VictoryTheme, VictoryAxis } from 'victory';
 import { WiseInsightsData } from './wiseInsightsSlice';
 
 interface PopularHashtagBarChartProps {
