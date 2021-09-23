@@ -1,0 +1,11 @@
+a.selected > .side-menu-item > p {
+  color: #000;
+}
+
+a.selected > .side-menu-item > svg {
+  color: #000;
+}
+
+a.selected > .side-menu-item {
+  background-color: #ffc2a1;
+}
